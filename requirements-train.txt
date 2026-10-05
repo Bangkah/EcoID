@@ -1,0 +1,6 @@
+# Only needed for Phase 2 training/export (not for running the app). Install on top of requirements.txt.
+# Versions deliberately not pinned here: after your first successful run, `pip freeze > requirements-train.lock`.
+# (train_meta.json also records the exact torch/torchvision versions used.)
+torch>=2.2
+torchvision>=0.17
+onnx>=1.16

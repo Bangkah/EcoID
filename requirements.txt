@@ -1,0 +1,4 @@
+# Runtime (pinned to versions the Phase 1 suite was run against; Python >= 3.11 for tomllib)
+numpy==2.4.4
+Pillow==12.1.1
+onnxruntime==1.24.4
