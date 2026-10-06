@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+# local data / artifacts (never commit datasets, weights or reports)
+/data/*
+!/data/.gitkeep
+/data_synth/
+/models/*
+!/models/.gitkeep
+/reports/*
+!/reports/.gitkeep
+*.onnx
+*.pt
+*.zip

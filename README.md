@@ -13,6 +13,7 @@ pip install -r requirements.txt        # Python >= 3.11
 ```
 python -m unittest discover -s tests -t . -v
 ```
+CI runs the same suite on every push/PR (`docs/ci.md`).
 
 ## Try it
 ```
@@ -34,8 +35,14 @@ python scripts/evaluate.py --model models/ecoid.onnx
 ```
 See `docs/dataset.md`, `docs/model.md`, `docs/benchmark.md`.
 
+## Run the app (Phase 3)
+```
+python -m app --model models/ecoid.onnx --open      # then use the browser at http://127.0.0.1:8765
+```
+Photos and observations are stored in `~/.ecoid` (change with `--data-dir`). No internet is used.
+
 ## Docs
-`docs/SRS.md` is the requirements specification.
+`docs/SRS.md` requirements · `docs/architecture.md` · `docs/privacy.md` · per-phase notes in `docs/phase*.md`.
 
 ## Status
-Phase 1 done (`docs/phase1.md`). Phase 2 tooling done; needs real data + training run (`docs/phase2.md`).
+Phase 1 done. Phase 2 tooling done; needs real data + training run. Phase 3 (app: storage, UI, history, offline e2e) done — see `docs/phase3.md` for the manual browser checklist.
