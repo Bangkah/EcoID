@@ -76,7 +76,7 @@ class EndToEndEvalTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.tmp = tempfile.TemporaryDirectory()
+        cls.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         root = Path(cls.tmp.name)
         cls.model = root / "tiny.onnx"
         subprocess.check_call([sys.executable, str(ROOT / "scripts" / "make_test_onnx.py"), str(cls.model)])

@@ -1,5 +1,4 @@
 import io
-import os
 import subprocess
 import sys
 import tempfile
@@ -80,7 +79,7 @@ class PreprocessTests(unittest.TestCase):
         buf = io.BytesIO()
         solid((9, 9, 9)).save(buf, "PNG")
         a = preprocess(buf.getvalue())
-        with tempfile.TemporaryDirectory() as d:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
             p = Path(d) / "x.png"
             p.write_bytes(buf.getvalue())
             b = preprocess(p)
@@ -183,7 +182,7 @@ class IdentifierTests(unittest.TestCase):
 
 class ConfigTests(unittest.TestCase):
     def _write(self, text):
-        d = tempfile.TemporaryDirectory()
+        d = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(d.cleanup)
         p = Path(d.name) / "c.toml"
         p.write_text(text)
@@ -220,7 +219,7 @@ class OnnxIntegrationTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.tmp = tempfile.TemporaryDirectory()
+        cls.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         cls.model = Path(cls.tmp.name) / "tiny.onnx"
         subprocess.check_call(
             [sys.executable, str(ROOT / "scripts" / "make_test_onnx.py"), str(cls.model)]

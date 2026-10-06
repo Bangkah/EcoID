@@ -14,6 +14,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: lint (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "ruff>=0.5"
+      - run: ruff check app scripts tests
+
   tests:
     name: tests (py${{ matrix.python }}, ubuntu)
     runs-on: ubuntu-latest
@@ -48,9 +60,61 @@ jobs:
       - name: Run test suite
         run: python -W error::ResourceWarning -m unittest discover -s tests -t . -v
 
-  # Same suite on Windows (the app targets laptops). Reported but non-blocking until it has been seen green once.
+      # Report only: never decides pass/fail.
+      - name: Coverage report
+        if: matrix.python == '3.12'
+        continue-on-error: true
+        run: |
+          pip install "coverage>=7"
+          python -m coverage run --branch --source=app -m unittest discover -s tests -t .
+          echo "### Coverage (app/)" >> "$GITHUB_STEP_SUMMARY"
+          python -m coverage report --skip-empty --format=markdown >> "$GITHUB_STEP_SUMMARY"
+          python -m coverage html -d reports/coverage
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.python == '3.12' && always()
+        with:
+          name: coverage-html
+          path: reports/coverage/
+          if-no-files-found: ignore
+
+  # Real Chromium (headless) against the real server: capture -> result -> verify -> history -> edit -> delete,
+  # low-confidence banner, model info, phone viewport, dark mode, Chromium's fake camera, no outbound requests,
+  # no JavaScript errors. Screenshots of every state are uploaded as an artifact for human review.
+  ui-e2e:
+    name: ui-e2e (chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-browser.txt
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-browser.txt
+          playwright install --with-deps chromium
+      - name: Browser tests
+        env:
+          ECOID_BROWSER_TESTS: "1"
+          ECOID_SCREENSHOTS: reports/screenshots
+        run: python -m unittest tests.ui_browser.test_browser_flow -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-screenshots
+          path: reports/screenshots/
+          if-no-files-found: ignore
+
+  # Same suite on Windows (the app targets laptops). Reported but non-blocking until it has been seen green once;
+  # then delete the `continue-on-error` line and add it to branch protection (docs/ci.md).
   tests-windows:
-    name: tests (py3.12, windows — experimental)
+    name: tests (py3.12, windows - experimental)
     runs-on: windows-latest
     continue-on-error: true
     timeout-minutes: 20

@@ -1,18 +1,32 @@
 # EXPERIMENTAL — written but never executed when authored (the authoring sandbox had no PyTorch).
 # Rehearses Phase 2 end to end on a SYNTHETIC dataset: check -> train -> export (+parity) -> calibrate -> evaluate.
 # It proves the scripts run and the ONNX export matches PyTorch; it says nothing about plant accuracy.
-# Not part of the required checks. Run it manually (Actions -> train-smoke -> Run workflow) or it runs when
-# the training/export scripts change.
+# Runs: manually (Actions -> train-smoke -> Run workflow), on PRs/pushes that touch the training/export code,
+# and weekly (Monday 06:00 UTC) to catch dependency rot (new torch/torchvision/onnx releases).
+# Keep it OUT of "required status checks": a required check whose path filter did not trigger stays "pending"
+# forever on GitHub. After its first green run, treat a red run on a PR touching those files as a merge blocker by convention.
 name: train-smoke
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
   push:
     paths:
       - scripts/train.py
       - scripts/export_model.py
       - scripts/_torch_common.py
       - scripts/make_synthetic_dataset.py
+      - app/ai/preprocessing/**
+      - requirements-train.txt
+      - .github/workflows/train-smoke.yml
+  pull_request:
+    paths:
+      - scripts/train.py
+      - scripts/export_model.py
+      - scripts/_torch_common.py
+      - scripts/make_synthetic_dataset.py
+      - app/ai/preprocessing/**
       - requirements-train.txt
       - .github/workflows/train-smoke.yml
 

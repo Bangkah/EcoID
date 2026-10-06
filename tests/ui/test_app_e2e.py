@@ -25,7 +25,7 @@ FR007 = {"id", "image_path", "predicted_species", "confidence", "alternative_pre
 class AppE2E(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.tmp = tempfile.TemporaryDirectory()
+        cls.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         cls.root = Path(cls.tmp.name)
         cls.model = cls.root / "tiny.onnx"
         subprocess.check_call([sys.executable, str(ROOT / "scripts" / "make_test_onnx.py"), str(cls.model)])
@@ -208,7 +208,7 @@ class AppE2E(unittest.TestCase):
 
 class EntrypointTests(unittest.TestCase):
     def test_python_m_app_serves_and_is_reachable(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             model = Path(tmp) / "tiny.onnx"
             subprocess.check_call([sys.executable, str(ROOT / "scripts" / "make_test_onnx.py"), str(model)])
             p = subprocess.Popen([sys.executable, "-m", "app", "--model", str(model), "--data-dir", str(Path(tmp) / "d"),
