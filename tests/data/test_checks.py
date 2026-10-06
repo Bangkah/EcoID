@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from app.ai.data.checks import CLASS_DIRS, check_dataset, dhash, find_duplicates, list_images
+from app.ai.data.checks import CLASS_DIRS, check_dataset, dhash, list_images
 
 RNG = np.random.default_rng(1)
 
@@ -43,7 +43,7 @@ def write_meta(root: Path, license="CC-BY"):
 
 class DatasetCheckTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
+        self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.root = Path(self.tmp.name)
         make_dataset(self.root)
         write_meta(self.root)

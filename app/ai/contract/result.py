@@ -1,7 +1,7 @@
 """Model contract (SRS section 7). UI/storage depend ONLY on these types."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from enum import Enum
 
 

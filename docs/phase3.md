@@ -3,8 +3,8 @@
 | Item | Where | Status |
 |---|---|---|
 | 3.1 Observation storage (FR-007) | `app/observation/models.py`, `app/storage/store.py`, `app/observation/manager.py` | done, tested |
-| 3.2 UI: capture → result → verify | `app/ui/static/index.html`, `app/ui/server.py` | done; logic tested, **not yet seen in a real browser** |
-| 3.3 History view | same page, History tab | done; same caveat |
+| 3.2 UI: capture → result → verify | `app/ui/static/index.html`, `app/ui/server.py` | done; tested in real Chromium (`tests/ui_browser/`) |
+| 3.3 History view | same page, History tab | done; tested in real Chromium |
 | 3.4 End-to-end offline test | `tests/ui/test_app_e2e.py`, `tests/ui/smoke.js` | done |
 
 ## Run
@@ -22,15 +22,15 @@ Before the real model exists you can try the UI with the synthetic one:
 - offline: full flow with the network blocked → zero outbound attempts; page contains no external references
 - UI script: the page's real JavaScript is executed (stub DOM, real HTTP) through capture → verify → history → edit → delete
 
-## Not verified here
-No browser was available in the build environment. Not exercised: layout/CSS, `<dialog>` behaviour, the
-camera inputs (`capture`), webcam (`getUserMedia`), phone use. Do a 5-minute manual pass (checklist below).
+## Real-browser verification
+`tests/ui_browser/test_browser_flow.py` runs the app in headless Chromium (Playwright) and saves screenshots.
+It found and led to a fix of one real issue (history could show stale results when the filter changed quickly).
+Automated: layout/overflow on a 390 px viewport, `<dialog>`, thumbnails and photos actually loading, low-confidence banner,
+all three verification choices, history filter/edit/delete, model-info dialog, dark mode, webcam path with Chromium's fake
+camera, zero outbound requests, zero JavaScript errors.
 
-### Manual checklist
-- [ ] choose a file → result card shows photo, 3 candidates with bars, common names
-- [ ] a blurry/unrelated photo shows the "Low confidence" banner
-- [ ] Verified / Rejected / Not sure each saves and shows "Saved ✓"
-- [ ] History lists it with thumbnail; filter works; tapping opens the detail dialog; status/notes edits stick; delete asks first
-- [ ] ⓘ shows model name, runtime, "Local / CPU", "5 plant species"
-- [ ] webcam works (allow camera); on a phone via `--host 0.0.0.0`, "Take photo" opens the camera
-- [ ] unplug the network → everything above still works
+## Still manual (needs physical devices)
+- [ ] a **real camera** (laptop webcam) — allow the permission prompt, capture, get a result
+- [ ] a **phone** on the same Wi-Fi: `python -m app --model ... --host 0.0.0.0`, open the printed address, "Take photo" opens the camera
+- [ ] glance at the uploaded `ui-screenshots` artifact once; automated checks cannot judge taste
+- [ ] unplug the network and repeat one identify → verify cycle

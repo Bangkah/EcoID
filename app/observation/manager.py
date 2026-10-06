@@ -23,7 +23,7 @@ from app.ai.contract.result import Candidate, IdentificationResult, Status
 from app.ai.inference.identifier import Identifier
 from app.ai.preprocessing.preprocess import InvalidImageError, load_image
 from app.observation.models import Observation
-from app.observation.verification import VerificationStatus, parse_status
+from app.observation.verification import parse_status
 from app.storage.store import NotFoundError, ObservationStore
 
 MAX_IMAGE_BYTES = 25 * 1024 * 1024

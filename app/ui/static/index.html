@@ -255,7 +255,7 @@ $("btn-snap").onclick = () => {
 
 /* ---------- history ---------- */
 const PAGE = 20;
-let histOffset = 0, histTotal = 0;
+let histOffset = 0, histTotal = 0, histSeq = 0;
 function when(iso) { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString(); }
 
 function histItem(o) {
@@ -272,10 +272,12 @@ function histItem(o) {
 
 async function loadHistory(reset) {
   if (reset) { histOffset = 0; $("hist-list").replaceChildren(); }
+  const seq = ++histSeq;                       // later calls win; late responses of earlier calls are dropped
   const status = $("flt").value;
   const q = "?limit=" + PAGE + "&offset=" + histOffset + (status ? "&status=" + status : "");
   try {
     const r = await api("/api/observations" + q);
+    if (seq !== histSeq) return;
     for (const o of r.items) $("hist-list").append(histItem(o));
     histOffset += r.items.length; histTotal = r.total;
     $("hist-count").textContent = r.total + " observation" + (r.total === 1 ? "" : "s");

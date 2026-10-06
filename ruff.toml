@@ -1,0 +1,7 @@
+target-version = "py311"
+line-length = 120
+
+[lint]
+# Deliberately small: things that are almost always real bugs (syntax errors, undefined names,
+# invalid comparisons, unused imports). Style rules are not enforced.
+select = ["E9", "F63", "F7", "F82", "F401"]

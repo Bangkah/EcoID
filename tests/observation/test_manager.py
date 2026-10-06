@@ -28,7 +28,7 @@ class Clock:
 
 class ManagerTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
+        self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.dir = Path(self.tmp.name)
         self.mgr = self.make(FakeBackend([8, 0, 0, 0, 0]))
 

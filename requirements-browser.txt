@@ -1,0 +1,2 @@
+# Only for the real-browser UI tests (tests/ui_browser). After installing: playwright install chromium
+playwright>=1.45,<2

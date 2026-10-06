@@ -13,7 +13,7 @@ pip install -r requirements.txt        # Python >= 3.11
 ```
 python -m unittest discover -s tests -t . -v
 ```
-CI runs the same suite on every push/PR (`docs/ci.md`).
+CI runs lint, the suite on Python 3.11/3.12 and real-browser (Chromium) UI tests on every push/PR (`docs/ci.md`).
 
 ## Try it
 ```
