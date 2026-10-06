@@ -91,9 +91,11 @@ def find_duplicates(groups: dict[str, list[Path]], max_hamming: int = 5):
     hashes = []
     for s, p in items:
         try:
-            hashes.append((dhash(p), s, p))
+            h = dhash(p)
         except Exception:
             continue
+        if 8 <= h.bit_count() <= 56:        # skip flat/blank images: their hash says nothing about similarity
+            hashes.append((h, s, p))
     exact_pairs = {(a, b) for a, b, _, _ in exact}
     near = []
     for i in range(len(hashes)):
@@ -103,6 +105,18 @@ def find_duplicates(groups: dict[str, list[Path]], max_hamming: int = 5):
             if (hi ^ hj).bit_count() <= max_hamming and (pi, pj) not in exact_pairs and (pj, pi) not in exact_pairs:
                 near.append((pi, pj, si, sj))
     return exact, near
+
+
+METADATA_FIELDS = ["path", "split", "label", "source", "license", "author", "url"]
+
+
+def write_metadata(path: Path, rows) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, METADATA_FIELDS)
+        w.writeheader()
+        for r in sorted(rows, key=lambda r: r["path"]):
+            w.writerow({k: r.get(k, "") for k in METADATA_FIELDS})
 
 
 def read_metadata(path: Path) -> dict[str, dict]:

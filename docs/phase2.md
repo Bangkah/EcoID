@@ -13,6 +13,10 @@ through real ONNX Runtime using the synthetic model.
 safety net is the export parity check; run it first and read its output. Expect to fix small API/version issues
 on the first run.
 
+## Getting the real data
+`docs/data_collection.md` + `scripts/fetch_inat.py` (iNaturalist, licensed photos, split by photographer, manual QC tools).
+Tested against a fake iNaturalist only; first live step is `fetch_inat.py probe`.
+
 ## Definition of done for Phase 2
 - [ ] `check_dataset.py` → 0 errors on real data
 - [ ] trained model exported, parity checks pass, `.onnx.json` sidecar written

@@ -1,0 +1,42 @@
+# Which iNaturalist taxa feed which dataset group. Names are resolved against the live taxonomy by
+# `python scripts/fetch_inat.py plan` (exact, case-insensitive name match; the most-observed active match wins) and the
+# resolution is PRINTED -- read it. To pin a taxon, give {id = 12345} instead of a name.
+
+[classes]
+# One SRS class -> one or more iNaturalist taxa (observations of descendants are included automatically).
+"Mangifera indica"  = ["Mangifera indica"]
+"Cocos nucifera"    = ["Cocos nucifera"]
+"Carica papaya"     = ["Carica papaya"]
+"Manihot esculenta" = ["Manihot esculenta"]
+# DECISION NEEDED for pisang. Cultivated bananas are often filed on iNaturalist under hybrids/cultivars rather than
+# the wild species. If `plan` shows few usable "Musa acuminata" photos, consider adding the others here, e.g.
+#   "Musa acuminata" = ["Musa acuminata", "Musa × paradisiaca"]
+# -- but then the class really means "pisang", not the species, and docs/SRS.md should say so.
+"Musa acuminata"    = ["Musa acuminata"]
+
+# ---- negatives (SRS section 6) ----
+[negatives.lookalike_plants]      # tropical plants people confuse with the target classes (REQUIRED by the SRS)
+taxa = [
+  "Nephelium lappaceum",   # rambutan
+  "Artocarpus heterophyllus", # nangka
+  "Annona muricata",       # sirsak
+  "Citrus",                # jeruk (genus)
+  "Mangifera foetida",     # bacang  - same genus as mango: the hardest lookalike
+  "Mangifera odorata",     # kuweni
+  "Elaeis guineensis",     # oil palm - vs. coconut
+  "Areca catechu",         # pinang   - vs. coconut
+  "Ricinus communis",      # castor   - vs. cassava / papaya leaves
+  "Jatropha curcas",
+  "Heliconia",             # vs. banana
+  "Canna",                 # vs. banana
+]
+
+[negatives.non_plant]
+# iNaturalist only contains living things. Everyday objects (hands, soil, walls, desks, sky...) must be your own photos:
+# put them in data/negative/non_plant/ yourself and run  scripts/make_metadata_template.py --own negative/non_plant
+taxa = ["Aves", "Insecta", "Fungi", "Mammalia"]
+
+[negatives.low_quality]
+# Photos of NON-target things that are deliberately degraded (blur, dark, over-exposed, tiny crop, heavy JPEG) at download time.
+degrade = true
+taxa = ["Aves", "Insecta", "Fungi", "Mammalia", "Nephelium lappaceum", "Artocarpus heterophyllus"]
