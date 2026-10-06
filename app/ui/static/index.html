@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EcoID</title>
+<style>
+:root{--bg:#f6f7f4;--card:#fff;--text:#1d2420;--muted:#66726b;--line:#dfe4dd;--accent:#2f7d4f;--accent-text:#fff;
+--warn-bg:#fff4d6;--warn-text:#6a4b00;--ok:#2f7d4f;--bad:#b3402f;--unsure:#8a6d1c}
+@media (prefers-color-scheme:dark){:root{--bg:#141815;--card:#1d231f;--text:#e8ece9;--muted:#9aa7a0;--line:#2e3731;
+--accent:#4fae77;--accent-text:#0d1a12;--warn-bg:#3a3010;--warn-text:#f2d98a;--ok:#4fae77;--bad:#e0705f;--unsure:#d9b650}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:2}
+header h1{font-size:1.15rem;margin:0}
+nav{display:flex;gap:4px;margin-left:auto}
+button,.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:10px 14px;cursor:pointer;display:inline-block;text-align:center}
+button:hover,.btn:hover{border-color:var(--accent)}
+button.primary,.btn.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+nav button[aria-pressed=true]{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+button:disabled{opacity:.5;cursor:default}
+main{max-width:760px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 150px}
+.muted{color:var(--muted);font-size:.9rem}
+.hidden{display:none!important}
+img.preview{width:100%;max-height:360px;object-fit:contain;border-radius:10px;background:#0002}
+.cand{display:grid;grid-template-columns:1fr auto;gap:2px 10px;margin:10px 0}
+.cand .bar{grid-column:1/3;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.cand .bar i{display:block;height:100%;background:var(--accent)}
+.cand .sci{font-style:italic}
+.warn{background:var(--warn-bg);color:var(--warn-text);border-radius:10px;padding:12px;margin:10px 0}
+textarea{width:100%;min-height:70px;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
+.verify{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.verify button{padding:14px 6px;font-weight:600}
+.v-VERIFIED{color:var(--ok)}.v-REJECTED{color:var(--bad)}.v-UNCERTAIN{color:var(--unsure)}
+.badge{font-size:.75rem;font-weight:700;border:1px solid currentColor;border-radius:999px;padding:1px 8px}
+.item{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.item img{width:84px;height:84px;object-fit:cover;border-radius:8px;flex:none;background:#0002}
+.item .meta{min-width:0}
+.item .notes{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--text);max-width:min(680px,94vw);width:100%;padding:16px}
+dialog::backdrop{background:#0008}
+.spinner{width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s 1s linear infinite;margin:20px auto}
+@keyframes s{to{transform:rotate(360deg)}}
+video{width:100%;border-radius:10px;background:#000}
+.err{color:var(--bad);margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌿 EcoID</h1>
+  <nav>
+    <button id="tab-identify" aria-pressed="true">Identify</button>
+    <button id="tab-history" aria-pressed="false">History</button>
+    <button id="btn-about" title="Model information">ⓘ</button>
+  </nav>
+</header>
+<main>
+  <section id="view-identify">
+    <div id="s-capture" class="card">
+      <h2 style="margin-top:0">Photograph a plant</h2>
+      <p class="muted">EcoID suggests what it might be. You look at the real plant and decide.</p>
+      <div class="row">
+        <label class="btn primary" for="in-camera">📷 Take photo</label>
+        <label class="btn" for="in-file">🖼 Choose file</label>
+        <button id="btn-webcam">🎥 Webcam</button>
+      </div>
+      <input id="in-camera" type="file" accept="image/*" capture="environment" class="hidden">
+      <input id="in-file" type="file" accept="image/*" class="hidden">
+      <div id="webcam" class="hidden" style="margin-top:12px">
+        <video id="video" autoplay playsinline muted></video>
+        <div class="row" style="margin-top:8px"><button id="btn-snap" class="primary">Capture</button><button id="btn-webcam-cancel">Cancel</button></div>
+      </div>
+      <div id="capture-err" class="err hidden"></div>
+    </div>
+
+    <div id="s-analyzing" class="card hidden"><div class="spinner"></div><p class="muted" style="text-align:center">Analyzing on this device…</p></div>
+
+    <div id="s-result" class="card hidden">
+      <img id="res-img" class="preview" alt="Your photo">
+      <h2>Possible identification</h2>
+      <div id="res-cands"></div>
+      <div id="res-warn" class="warn hidden"><strong>⚠ Low confidence</strong><br>The model does not have enough confidence to provide a reliable identification.<br>Please inspect the plant and verify manually.</div>
+      <p><strong>Now look at the real plant.</strong> Does it match?</p>
+      <textarea id="res-notes" maxlength="2000" placeholder="Notes (optional)"></textarea>
+      <div class="verify">
+        <button data-v="VERIFIED" class="v-VERIFIED">✔ Verified</button>
+        <button data-v="REJECTED" class="v-REJECTED">✖ Rejected</button>
+        <button data-v="UNCERTAIN" class="v-UNCERTAIN">? Not sure</button>
+      </div>
+      <div class="row" style="margin-top:10px"><button id="btn-discard">Discard photo</button></div>
+      <div id="result-err" class="err hidden"></div>
+    </div>
+
+    <div id="s-saved" class="card hidden" style="text-align:center">
+      <h2>Saved ✓</h2>
+      <p>Now put the phone down and enjoy the plant. 🌱</p>
+      <button id="btn-again" class="primary">Identify another</button>
+    </div>
+  </section>
+
+  <section id="view-history" class="hidden">
+    <div class="card row" style="align-items:center">
+      <label for="flt">Show</label>
+      <select id="flt" style="font:inherit;padding:8px;border-radius:8px">
+        <option value="">All</option><option value="VERIFIED">Verified</option>
+        <option value="REJECTED">Rejected</option><option value="UNCERTAIN">Not sure</option>
+      </select>
+      <span id="hist-count" class="muted"></span>
+    </div>
+    <div id="hist-list"></div>
+    <div class="row"><button id="btn-more" class="hidden">Load more</button></div>
+    <p id="hist-empty" class="muted hidden">No observations yet. Identify a plant and verify it to start your history.</p>
+  </section>
+</main>
+
+<dialog id="dlg-detail">
+  <img id="d-img" class="preview" alt="Observation photo">
+  <h3 id="d-title" style="margin-bottom:0"></h3>
+  <div id="d-sub" class="muted"></div>
+  <div id="d-cands"></div>
+  <textarea id="d-notes" maxlength="2000" placeholder="Notes"></textarea>
+  <div class="verify" id="d-verify">
+    <button data-v="VERIFIED" class="v-VERIFIED">✔ Verified</button>
+    <button data-v="REJECTED" class="v-REJECTED">✖ Rejected</button>
+    <button data-v="UNCERTAIN" class="v-UNCERTAIN">? Not sure</button>
+  </div>
+  <div class="row" style="margin-top:10px"><button id="d-save" class="primary">Save notes</button><button id="d-delete">Delete</button><button id="d-close">Close</button></div>
+  <div id="d-err" class="err hidden"></div>
+</dialog>
+
+<dialog id="dlg-about">
+  <h3 style="margin-top:0">Model information</h3>
+  <div id="about-body">Loading…</div>
+  <div class="row" style="margin-top:12px"><button id="about-close">Close</button></div>
+</dialog>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const show = (id, on = true) => $(id).classList.toggle("hidden", !on);
+const LABEL = { VERIFIED: "Verified", REJECTED: "Rejected", UNCERTAIN: "Not sure" };
+let COMMON = {};
+let draft = null, draftUrl = null, busy = false;
+
+function el(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === "class") e.className = v; else if (k === "text") e.textContent = v; else e.setAttribute(k, v);
+  }
+  for (const kid of kids) if (kid != null) e.append(kid);
+  return e;
+}
+const pct = (x) => Math.round(x * 100) + "%";
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  let body = {};
+  try { body = await r.json(); } catch (_) {}
+  if (!r.ok) throw new Error(body.error || ("Request failed (" + r.status + ")"));
+  return body;
+}
+
+function renderCandidates(container, cands) {
+  container.replaceChildren();
+  const wrap = el("div", { class: "cand" });
+  for (const c of cands) {
+    const common = COMMON[c.label];
+    wrap.append(
+      el("div", {}, el("span", { class: "sci", text: c.label }), common ? el("span", { class: "muted", text: " · " + common }) : null),
+      el("div", { text: pct(c.score) }),
+      el("div", { class: "bar" }, el("i", { style: "width:" + Math.max(1, Math.round(c.score * 100)) + "%" }))
+    );
+  }
+  container.append(wrap);
+}
+
+/* ---------- tabs ---------- */
+function setTab(name) {
+  show("view-identify", name === "identify");
+  show("view-history", name === "history");
+  $("tab-identify").setAttribute("aria-pressed", String(name === "identify"));
+  $("tab-history").setAttribute("aria-pressed", String(name === "history"));
+  if (name === "history") loadHistory(true);
+}
+$("tab-identify").onclick = () => setTab("identify");
+$("tab-history").onclick = () => setTab("history");
+
+/* ---------- identify flow: capture -> result -> verify ---------- */
+function step(name) {
+  for (const s of ["capture", "analyzing", "result", "saved"]) show("s-" + s, s === name);
+}
+function showCaptureError(msg) { $("capture-err").textContent = msg; show("capture-err", !!msg); }
+
+async function submitImage(blob) {
+  showCaptureError("");
+  if (draftUrl) URL.revokeObjectURL(draftUrl);
+  draftUrl = URL.createObjectURL(blob);
+  step("analyzing");
+  try {
+    draft = await api("/api/identify", { method: "POST", headers: { "Content-Type": blob.type || "image/jpeg" }, body: blob });
+  } catch (e) {
+    step("capture"); showCaptureError(e.message); return;
+  }
+  $("res-img").src = draftUrl;
+  renderCandidates($("res-cands"), draft.result.candidates);
+  show("res-warn", draft.result.status === "LOW_CONFIDENCE");
+  $("res-notes").value = "";
+  show("result-err", false);
+  step("result");
+}
+for (const id of ["in-camera", "in-file"]) {
+  $(id).onchange = (ev) => { const f = ev.target.files[0]; ev.target.value = ""; if (f) submitImage(f); };
+}
+
+async function saveDraft(status) {
+  if (!draft || busy) return;
+  busy = true; show("result-err", false);
+  try {
+    await api("/api/observations", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ draft_id: draft.draft_id, verification_status: status, notes: $("res-notes").value }) });
+    draft = null; step("saved");
+  } catch (e) { $("result-err").textContent = e.message; show("result-err", true); }
+  busy = false;
+}
+for (const b of document.querySelectorAll("#s-result .verify button")) b.onclick = () => saveDraft(b.dataset.v);
+
+$("btn-discard").onclick = async () => {
+  if (draft) { try { await api("/api/drafts/" + draft.draft_id, { method: "DELETE" }); } catch (_) {} draft = null; }
+  step("capture");
+};
+$("btn-again").onclick = () => step("capture");
+
+/* ---------- webcam ---------- */
+let stream = null;
+function stopWebcam() { if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; show("webcam", false); }
+$("btn-webcam").onclick = async () => {
+  showCaptureError("");
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showCaptureError("Webcam is not available in this browser."); return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    $("video").srcObject = stream; show("webcam", true);
+  } catch (e) { showCaptureError("Could not open the camera: " + e.message); }
+};
+$("btn-webcam-cancel").onclick = stopWebcam;
+$("btn-snap").onclick = () => {
+  const v = $("video");
+  if (!v.videoWidth) return;
+  const c = document.createElement("canvas"); c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext("2d").drawImage(v, 0, 0);
+  c.toBlob((blob) => { stopWebcam(); if (blob) submitImage(blob); }, "image/jpeg", 0.92);
+};
+
+/* ---------- history ---------- */
+const PAGE = 20;
+let histOffset = 0, histTotal = 0;
+function when(iso) { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString(); }
+
+function histItem(o) {
+  const common = COMMON[o.predicted_species];
+  const title = el("div", {}, el("strong", { class: "sci", text: o.predicted_species }), common ? el("span", { class: "muted", text: " · " + common }) : null);
+  const line2 = el("div", { class: "muted", text: "AI suggestion " + pct(o.confidence) + (o.identification_status === "LOW_CONFIDENCE" ? " · low confidence" : "") });
+  const badge = el("span", { class: "badge v-" + o.verification_status, text: LABEL[o.verification_status] });
+  const meta = el("div", { class: "meta" }, title, line2, el("div", {}, badge, el("span", { class: "muted", text: "  " + when(o.timestamp) })),
+    o.notes ? el("div", { class: "notes muted", text: o.notes }) : null);
+  const card = el("div", { class: "card item" }, el("img", { src: "/thumbs/" + o.id, alt: "", loading: "lazy" }), meta);
+  card.onclick = () => openDetail(o);
+  return card;
+}
+
+async function loadHistory(reset) {
+  if (reset) { histOffset = 0; $("hist-list").replaceChildren(); }
+  const status = $("flt").value;
+  const q = "?limit=" + PAGE + "&offset=" + histOffset + (status ? "&status=" + status : "");
+  try {
+    const r = await api("/api/observations" + q);
+    for (const o of r.items) $("hist-list").append(histItem(o));
+    histOffset += r.items.length; histTotal = r.total;
+    $("hist-count").textContent = r.total + " observation" + (r.total === 1 ? "" : "s");
+    show("btn-more", histOffset < histTotal);
+    show("hist-empty", histTotal === 0 && !status);
+  } catch (e) { $("hist-count").textContent = e.message; }
+}
+$("flt").onchange = () => loadHistory(true);
+$("btn-more").onclick = () => loadHistory(false);
+
+/* ---------- detail dialog ---------- */
+let current = null;
+function openDetail(o) {
+  current = o;
+  $("d-img").src = "/images/" + o.id;
+  const common = COMMON[o.predicted_species];
+  $("d-title").textContent = o.predicted_species + (common ? " · " + common : "");
+  $("d-sub").textContent = "AI suggestion · " + when(o.timestamp) + " · " + o.model + " · status: " + LABEL[o.verification_status];
+  renderCandidates($("d-cands"), [{ label: o.predicted_species, score: o.confidence }, ...o.alternative_predictions]);
+  $("d-notes").value = o.notes || "";
+  show("d-err", false);
+  $("dlg-detail").showModal();
+}
+async function patch(body) {
+  show("d-err", false);
+  try {
+    current = await api("/api/observations/" + current.id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    $("d-sub").textContent = "AI suggestion · " + when(current.timestamp) + " · " + current.model + " · status: " + LABEL[current.verification_status];
+    loadHistory(true);
+  } catch (e) { $("d-err").textContent = e.message; show("d-err", true); }
+}
+for (const b of document.querySelectorAll("#d-verify button")) b.onclick = () => patch({ verification_status: b.dataset.v });
+$("d-save").onclick = () => patch({ notes: $("d-notes").value });
+$("d-close").onclick = () => $("dlg-detail").close();
+$("d-delete").onclick = async () => {
+  if (!confirm("Delete this observation and its photo from this device? This cannot be undone.")) return;
+  try { await api("/api/observations/" + current.id, { method: "DELETE" }); $("dlg-detail").close(); loadHistory(true); }
+  catch (e) { $("d-err").textContent = e.message; show("d-err", true); }
+};
+
+/* ---------- model info (SRS section 10) ---------- */
+$("btn-about").onclick = async () => {
+  const body = $("about-body");
+  $("dlg-about").showModal();
+  try {
+    const m = await api("/api/model");
+    body.replaceChildren();
+    const rows = [["Model", m.model], ["Runtime", m.runtime], ["Inference", m.inference], ["Classes", m.classes],
+      ["Unknown threshold", String(m.threshold)], ["Model file", m.file_sha256 ? "sha256 " + m.file_sha256.slice(0, 16) + "… (" + m.file_size_mb + " MB)" : "n/a"]];
+    for (const [k, v] of rows) body.append(el("div", {}, el("strong", { text: k + ": " }), document.createTextNode(v)));
+    body.append(el("p", { class: "muted", text: "Photos and observations stay on this device. Identification never uses the internet." }));
+  } catch (e) { body.textContent = e.message; }
+};
+$("about-close").onclick = () => $("dlg-about").close();
+
+(async () => {
+  try { const m = await api("/api/model"); for (const c of m.class_list) COMMON[c.scientific] = c.common; } catch (_) {}
+})();
+</script>
+</body>
+</html>

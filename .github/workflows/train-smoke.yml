@@ -1,0 +1,72 @@
+# EXPERIMENTAL — written but never executed when authored (the authoring sandbox had no PyTorch).
+# Rehearses Phase 2 end to end on a SYNTHETIC dataset: check -> train -> export (+parity) -> calibrate -> evaluate.
+# It proves the scripts run and the ONNX export matches PyTorch; it says nothing about plant accuracy.
+# Not part of the required checks. Run it manually (Actions -> train-smoke -> Run workflow) or it runs when
+# the training/export scripts change.
+name: train-smoke
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/train.py
+      - scripts/export_model.py
+      - scripts/_torch_common.py
+      - scripts/make_synthetic_dataset.py
+      - requirements-train.txt
+      - .github/workflows/train-smoke.yml
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-train.txt
+
+      - name: Install (CPU-only torch)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install "onnx>=1.16"
+
+      - name: Synthetic dataset passes the real dataset checker
+        run: |
+          python scripts/make_synthetic_dataset.py --out data_synth
+          python scripts/check_dataset.py --data data_synth
+
+      - name: Train (1 head epoch + 1 fine-tune epoch, downloads ImageNet weights)
+        run: |
+          python scripts/train.py --data data_synth --arch small --out models/checkpoints/smoke \
+            --epochs-head 1 --epochs-finetune 1 --unfreeze-blocks 2 --batch-size 8 --workers 0
+
+      - name: Export to ONNX and verify parity (fails on any mismatch)
+        run: |
+          python scripts/export_model.py --checkpoint models/checkpoints/smoke --out models/smoke.onnx \
+            --sample-dir data_synth/val
+
+      - name: Calibrate threshold and benchmark with the exported model
+        run: |
+          python scripts/calibrate_threshold.py --model models/smoke.onnx --val-dir data_synth/val \
+            --negative-val-dir data_synth/negative_val
+          python scripts/evaluate.py --model models/smoke.onnx --eval-dir data_synth/evaluation \
+            --negative-dir data_synth/negative
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-reports
+          path: |
+            reports/
+            models/smoke.onnx.json
+            models/checkpoints/smoke/train_meta.json
