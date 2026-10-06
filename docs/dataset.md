@@ -1,5 +1,7 @@
 # Dataset
 
+How to build it from iNaturalist: **`docs/data_collection.md`**.
+
 Spec: `SRS.md` section 6. Validated by `python scripts/check_dataset.py`.
 
 ## Layout

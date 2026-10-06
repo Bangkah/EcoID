@@ -25,6 +25,7 @@ python scripts/identify.py photo.jpg --model models/<model>.onnx
 The threshold is an initial value; it is calibrated in Phase 2.
 
 ## Phase 2 (model/data quality)
+Real data: `docs/data_collection.md` (`scripts/fetch_inat.py probe|plan|select|download`).
 ```
 pip install -r requirements-train.txt        # only for training/export
 python scripts/check_dataset.py              # layout, leakage, licenses
