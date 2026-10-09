@@ -48,6 +48,6 @@ Photos and observations are stored in `~/.ecoid` (change with `--data-dir`). No 
 `docs/SRS.md` requirements · `docs/phase4.md` (field observation) · `docs/phase5.md` (offline map, statistics, export/backup) · **`docs/srs_compliance.md`** (what is met, partly met, not met) · **`docs/first_run.md`** (runbook to the first real model) · `docs/architecture.md` · `docs/privacy.md` · per-phase notes in `docs/phase*.md`.
 
 ## Status
-Phase 1 done. Phase 2 tooling done; needs real data + training run. Phases 3-5 (app, field observation, Eco Mapper) done; the SRS audit is in `docs/srs_compliance.md`. What remains is real data + a real training run.
+Phase 1 done. Phase 2 now has a provisional global iNaturalist dataset and trained MobileNetV3-Small ONNX model; the model reached 80.3% validation accuracy and passed PyTorch/ONNX parity checks. Phases 3-5 (app, field observation, Eco Mapper) are done; the SRS audit is in `docs/srs_compliance.md`. Final field evaluation remains pending because the Indonesia evaluation split is still too small.
 
 Turn your field photos into dataset files: `python scripts/export_observations.py --split evaluation --per-class 10`.

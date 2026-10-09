@@ -190,7 +190,7 @@ class ConfigTests(unittest.TestCase):
 
     def test_default_config_loads(self):
         c = InferenceConfig.load()
-        self.assertEqual(c.threshold, 0.65)
+        self.assertEqual(c.threshold, 0.73)
         self.assertEqual(c.model_name, "EcoID Vision Model")
 
     def test_invalid_values_rejected(self):
