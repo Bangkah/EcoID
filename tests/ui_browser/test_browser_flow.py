@@ -46,7 +46,7 @@ class BrowserTests(unittest.TestCase):
         model = root / "tiny.onnx"
         subprocess.check_call([sys.executable, str(ROOT / "scripts" / "make_test_onnx.py"), str(model)])
         cls.proc = subprocess.Popen([sys.executable, "-m", "app", "--model", str(model), "--data-dir", str(root / "data"),
-                                     "--port", "0"], cwd=ROOT, stdout=subprocess.PIPE, text=True)
+                                     "--port", "0"], cwd=ROOT, stdout=subprocess.PIPE, text=True, encoding="utf-8", errors="replace")
         cls._timer = threading.Timer(300, cls.proc.kill)
         cls._timer.start()
         m = re.search(r"(http://127\.0\.0\.1:\d+)", cls.proc.stdout.readline())
@@ -82,6 +82,12 @@ class BrowserTests(unittest.TestCase):
 
         context.route("**/*", gate)
         page = context.new_page()
+        if os.environ.get("ECOID_RAF_DELAY_MS"):          # delay every animation frame: makes "redraw not done yet" races deterministic
+            context.add_init_script("window.requestAnimationFrame = (f) => setTimeout(() => f(performance.now()), %d);"
+                                    % int(os.environ["ECOID_RAF_DELAY_MS"]))
+        if os.environ.get("ECOID_CPU_THROTTLE"):          # emulate a slow CI runner to flush out timing races
+            cdp = context.new_cdp_session(page)
+            cdp.send("Emulation.setCPUThrottlingRate", {"rate": float(os.environ["ECOID_CPU_THROTTLE"])})
         page.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
         page.on("console", lambda m: errors.append(f"console.error: {m.text}")
                 if m.type == "error" and not any(re.search(a, m.text) for a in allow_console) else None)
@@ -485,6 +491,10 @@ class BrowserTests(unittest.TestCase):
         self.wait_js(page, f"() => {{ const x = [...document.querySelectorAll('#map-svg .marker')].map(e => +e.getAttribute('cx')); return x.length > 1 ? Math.max(...x) - Math.min(...x) > {spread} * 1.5 : true; }}")
         self.assertNotEqual(page.locator("#map-scale").inner_text(), scale)               # scale bar follows the zoom
         page.click("#map-fit")
+        # Fit redraws on the next animation frame; zoomed in, no marker may be on screen. Wait for the fitted view to be
+        # drawn again (same scale bar as before zooming, all 3 markers) before measuring anything.
+        self.wait_js(page, f"() => document.getElementById('map-scale').innerText === {json.dumps(scale)}")
+        expect(markers).to_have_count(3)
         box = page.locator("#map-svg").bounding_box()
         before = self.marker_xs(page)[0]
         page.mouse.move(box["x"] + 25, box["y"] + 25)                                      # drag on empty background
@@ -538,7 +548,7 @@ class BrowserTests(unittest.TestCase):
         self.seed(tag, "VERIFIED", 5.20, 97.15)
         cfg = self.data_dir / "basemap.json"
         (self.data_dir / "bm.png").write_bytes(image_bytes((200, 210, 190), (200, 200), "PNG"))
-        cfg.write_text(json.dumps({"image": "bm.png", "bounds": [5.15, 97.10, 5.25, 97.20], "attribution": "test basemap"}))
+        cfg.write_text(json.dumps({"image": "bm.png", "bounds": [5.15, 97.10, 5.25, 97.20], "attribution": "test basemap"}), encoding="utf-8")
         try:
             page2 = self.new_page(viewport={"width": 1000, "height": 800})
             self.open_tab(page2, "map", tag)

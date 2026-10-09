@@ -107,14 +107,14 @@ class ObservationManager:
         meta_path, ddir = self._draft_files(draft_id)
         (ddir / f"{draft_id}{ext}").write_bytes(image_bytes)           # original bytes, untouched
         meta_path.write_text(json.dumps({"result": result.to_dict(), "threshold": result.threshold,
-                                         "ext": ext, "created": time.time(), "exif": exif.to_dict()}))
+                                         "ext": ext, "created": time.time(), "exif": exif.to_dict()}), encoding="utf-8")
         return Draft(draft_id, result, ext, time.time(), exif)
 
     def _load_draft(self, draft_id: str) -> Draft:
         meta_path, ddir = self._draft_files(draft_id)
         if not meta_path.is_file():
             raise NotFoundError(draft_id)
-        m = json.loads(meta_path.read_text())
+        m = json.loads(meta_path.read_text(encoding="utf-8"))
         r = m["result"]
         result = IdentificationResult(
             candidates=tuple(Candidate(c["label"], c["score"]) for c in r["candidates"]),
@@ -134,7 +134,7 @@ class ObservationManager:
         n, cutoff = 0, time.time() - max_age_hours * 3600
         for meta in (self.store.data_dir / "drafts").glob("*.json"):
             try:
-                if json.loads(meta.read_text()).get("created", 0) < cutoff:
+                if json.loads(meta.read_text(encoding="utf-8")).get("created", 0) < cutoff:
                     self.discard(meta.stem)
                     n += 1
             except Exception:

@@ -89,14 +89,14 @@ class FieldExportTests(unittest.TestCase):
 
     def test_cli_and_dataset_checker_accept_the_result(self):
         r = subprocess.run([sys.executable, str(ROOT / "scripts" / "export_observations.py"), "--app-data", str(self.app),
-                            "--data", str(self.data), "--split", "evaluation"], capture_output=True, text=True)
+                            "--data", str(self.data), "--split", "evaluation"], capture_output=True, text=True, encoding="utf-8", errors="replace")
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("'exported': 4", r.stdout)
         res = check_dataset(self.data, train_range=(0, 999), eval_per_class=0, min_negative=0)
         # (folders other than evaluation/negative are absent in this tiny fixture; only duplicates/licences matter here)
         self.assertFalse([e for e in res.errors if "duplicate" in e or "licen" in e or "metadata" in e], res.errors)
         r2 = subprocess.run([sys.executable, str(ROOT / "scripts" / "export_observations.py"), "--app-data",
-                             str(self.app / "nope"), "--split", "val"], capture_output=True, text=True)
+                             str(self.app / "nope"), "--split", "val"], capture_output=True, text=True, encoding="utf-8", errors="replace")
         self.assertNotEqual(r2.returncode, 0)
 
 
