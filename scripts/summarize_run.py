@@ -17,7 +17,7 @@ from app.ai.data.checks import CLASS_DIRS, REQUIRED_NEGATIVE_GROUPS, check_datas
 def load(path):
     p = Path(path)
     try:
-        return json.loads(p.read_text(encoding="utf-8")) if p.is_file() else None
+        return json.loads(p.read_text()) if p.is_file() else None
     except (OSError, ValueError):
         return None
 

@@ -14,7 +14,7 @@ STATIC = "https://static.inaturalist.org/photos/{pid}/square.jpg"
 
 
 def all_taxon_names():
-    cfg = tomllib.loads((ROOT / "config" / "inat_taxa.toml").read_text(encoding="utf-8"))
+    cfg = tomllib.loads((ROOT / "config" / "inat_taxa.toml").read_text())
     names = {n for v in cfg["classes"].values() for n in v}
     for g in cfg["negatives"].values():
         names |= set(g["taxa"])

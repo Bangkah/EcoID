@@ -35,7 +35,7 @@ def write_meta(root: Path, license="CC-BY"):
         rows.append({"path": rel, "split": rel.split("/")[0], "label": "", "source": "x",
                      "license": license, "author": "a", "url": "u"})
     (root / "metadata").mkdir(exist_ok=True)
-    with open(root / "metadata" / "images.csv", "w", newline="", encoding="utf-8") as f:
+    with open(root / "metadata" / "images.csv", "w", newline="") as f:
         w = csv.DictWriter(f, ["path", "split", "label", "source", "license", "author", "url"])
         w.writeheader()
         w.writerows(rows)

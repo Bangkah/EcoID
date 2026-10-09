@@ -113,14 +113,14 @@ class EndToEndEvalTests(unittest.TestCase):
         subprocess.check_call([sys.executable, str(ROOT / "scripts" / "evaluate.py"), "--model", str(self.model),
                                "--eval-dir", str(self.root / "eval"), "--negative-dir", str(self.root / "neg"),
                                "--out", str(out)], stdout=subprocess.DEVNULL)
-        data = json.loads((out / "benchmark.json").read_text(encoding="utf-8"))
+        data = json.loads((out / "benchmark.json").read_text())
         self.assertEqual(len(data["model_sha256"]), 64)
-        self.assertTrue((out / "benchmark.txt").read_text(encoding="utf-8").startswith("EcoID Vision Model"))
+        self.assertTrue((out / "benchmark.txt").read_text().startswith("EcoID Vision Model"))
         subprocess.check_call([sys.executable, str(ROOT / "scripts" / "calibrate_threshold.py"),
                                "--model", str(self.model), "--val-dir", str(self.root / "eval"),
                                "--negative-val-dir", str(self.root / "neg"), "--out", str(out)],
                               stdout=subprocess.DEVNULL)
-        cal = json.loads((out / "calibration.json").read_text(encoding="utf-8"))
+        cal = json.loads((out / "calibration.json").read_text())
         self.assertIsNotNone(cal["recommended"])
 
     def test_empty_negative_dir_is_reported_not_crashed(self):

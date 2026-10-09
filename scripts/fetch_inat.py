@@ -69,7 +69,7 @@ def cmd_plan(a):
 def cmd_select(a):
     data, cand_dir, sel_path = paths(a)
     rej = data / "metadata" / "rejected_photo_ids.txt"
-    exclude = {int(x) for x in rej.read_text(encoding="utf-8").split() if x.isdigit()} if rej.exists() else set()
+    exclude = {int(x) for x in rej.read_text().split() if x.isdigit()} if rej.exists() else set()
     targets = {"train": a.train, "val": a.val, "evaluation": a.eval}
     neg = {"lookalike_plants": {"negative": a.neg_lookalike, "negative_val": a.negval_lookalike},
            "non_plant": {"negative": a.neg_non_plant, "negative_val": a.negval_non_plant},

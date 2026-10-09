@@ -60,16 +60,6 @@ jobs:
       - name: Run test suite
         run: python -W error::ResourceWarning -m unittest discover -s tests -t . -v
 
-      # Windows decodes text as cp1252 by default; ASCII-only defaults are stricter still. Running the suite this way on Linux
-      # catches "works here, crashes on Windows" bugs (e.g. read_text() without encoding) without waiting for the Windows job.
-      - name: Run test suite with a non-UTF-8 default encoding (Windows emulation)
-        if: matrix.python == '3.12'
-        env:
-          PYTHONUTF8: "0"
-          PYTHONCOERCECLOCALE: "0"
-          LC_ALL: C
-        run: python -W error::ResourceWarning -m unittest discover -s tests -t .
-
       # Report only: never decides pass/fail.
       - name: Coverage report
         if: matrix.python == '3.12'

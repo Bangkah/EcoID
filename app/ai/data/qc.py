@@ -69,6 +69,6 @@ def apply_rejections(data_dir: Path, ids: set[str], dry_run=False) -> list[str]:
     if moved and not dry_run:
         write_metadata(data_dir / "metadata" / "images.csv", meta.values())
         log = data_dir / "metadata" / "rejected_photo_ids.txt"
-        known = set(log.read_text(encoding="utf-8").split()) if log.exists() else set()
-        log.write_text("\n".join(sorted(known | ids)) + "\n", encoding="utf-8")
+        known = set(log.read_text().split()) if log.exists() else set()
+        log.write_text("\n".join(sorted(known | ids)) + "\n")
     return moved

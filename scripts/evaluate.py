@@ -31,9 +31,9 @@ def main():
     res["model_sha256"] = sha256_file(Path(a.model))
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "benchmark.json").write_text(json.dumps(res, indent=2), encoding="utf-8")
+    (out / "benchmark.json").write_text(json.dumps(res, indent=2))
     text = format_report(res)
-    (out / "benchmark.txt").write_text(text, encoding="utf-8")
+    (out / "benchmark.txt").write_text(text)
     print(text)
 
 

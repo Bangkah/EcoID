@@ -30,7 +30,7 @@ def main():
     a = ap.parse_args()
 
     run = Path(a.checkpoint)
-    meta = json.loads((run / "train_meta.json").read_text(encoding="utf-8"))
+    meta = json.loads((run / "train_meta.json").read_text())
     arch = meta["arch"].split("_")[-1]
     model = C.build_model(arch, pretrained=False)           # loading OUR fine-tuned weights, not scratch training
     model.load_state_dict(torch.load(run / "best.pt", map_location="cpu"))
@@ -87,7 +87,7 @@ def main():
                "output": "raw logits [N,5] (softmax applied in post-processing)",
                "source_checkpoint": str(run), "train_fingerprint": meta.get("train_fingerprint"),
                "versions": meta.get("versions"), "parity_checks": checks, "opset": a.opset}
-    Path(str(out) + ".json").write_text(json.dumps(sidecar, indent=2), encoding="utf-8")
+    Path(str(out) + ".json").write_text(json.dumps(sidecar, indent=2))
     print(json.dumps(sidecar["parity_checks"], indent=2))
     print(f"size {out.stat().st_size/1e6:.1f} MB  sha256 {sha[:16]}...")
     if failures:

@@ -17,7 +17,7 @@ class SyntheticDatasetTests(unittest.TestCase):
             r = check_dataset(Path(tmp))             # default SRS thresholds: negatives >= 100, lookalikes present, licences, no leakage
             self.assertEqual(r.errors, [])
             r2 = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_dataset.py"), "--data", tmp],
-                                capture_output=True, text=True, encoding="utf-8", errors="replace")
+                                capture_output=True, text=True)
             self.assertEqual(r2.returncode, 0, r2.stdout)
 
 

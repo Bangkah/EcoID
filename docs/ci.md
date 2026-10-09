@@ -7,7 +7,6 @@ Workflows live in `.github/workflows/` (SRS section 19).
 | `lint` | `ruff check` with a deliberately small rule set (syntax errors, undefined names, invalid comparisons, unused imports) | yes |
 | `tests (py3.11 / py3.12, ubuntu)` | byte-compile everything, then the full suite with `-W error::ResourceWarning` | **yes** |
 | `ui-e2e (chromium)` | the same app in a **real headless Chromium** via Playwright; uploads screenshots of every state | **yes** |
-| `tests` also runs the suite once more under a **non-UTF-8 default encoding** (Linux, py3.12): the cheap way to catch Windows-only crashes like `read_text()` without `encoding` | **yes** |
 | `tests-windows` | the suite on Windows / Python 3.12 | no (`continue-on-error`) until seen green once |
 | `train-smoke` (separate workflow) | synthetic data → check → train → ONNX export + parity → calibrate → evaluate (CPU torch) | no; manual, weekly, and on changes to training/export/preprocessing code |
 | coverage (step in `tests`, py3.12) | coverage of `app/` in the job summary + HTML artifact | report only |

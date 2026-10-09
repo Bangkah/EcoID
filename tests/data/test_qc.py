@@ -33,7 +33,7 @@ class QcTests(unittest.TestCase):
 
     def test_reject_file_parsing(self):
         f = self.root / "r.txt"
-        f.write_text("123  # blurry\n\n# whole line comment\ntrain/Musa_acuminata/456.jpg\n", encoding="utf-8")
+        f.write_text("123  # blurry\n\n# whole line comment\ntrain/Musa_acuminata/456.jpg\n")
         self.assertEqual(read_reject_ids(f), {"123", "456"})
 
     def test_apply_rejections_moves_files_updates_metadata_and_remembers(self):
@@ -47,7 +47,7 @@ class QcTests(unittest.TestCase):
         self.assertFalse(victim.exists())
         self.assertTrue((self.root / "_rejected" / "train" / CLASS_DIRS[1] / "1.jpg").exists())
         self.assertNotIn(f"train/{CLASS_DIRS[1]}/1.jpg", read_metadata(self.root / "metadata" / "images.csv"))
-        self.assertIn("1", (self.root / "metadata" / "rejected_photo_ids.txt").read_text(encoding="utf-8").split())
+        self.assertIn("1", (self.root / "metadata" / "rejected_photo_ids.txt").read_text().split())
         r = check_dataset(self.root, train_range=(1, 999), eval_per_class=2, min_negative=5)
         self.assertEqual(r.errors, [])                                # dataset still consistent afterwards
 
@@ -62,7 +62,7 @@ class QcTests(unittest.TestCase):
     def test_template_script_marks_own_photos(self):
         (self.root / "metadata" / "images.csv").unlink()
         r = subprocess.run([sys.executable, str(ROOT / "scripts" / "make_metadata_template.py"), "--data", str(self.root),
-                            "--own", "negative/non_plant"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+                            "--own", "negative/non_plant"], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         meta = read_metadata(self.root / "metadata" / "images.csv")
         own = [v for k, v in meta.items() if k.startswith("negative/non_plant/")]

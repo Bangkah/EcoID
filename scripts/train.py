@@ -152,7 +152,7 @@ def main():
         "versions": {"torch": torch.__version__, "torchvision": torchvision.__version__,
                      "python": platform.python_version(), "device": str(device)},
     }
-    (out / "train_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    (out / "train_meta.json").write_text(json.dumps(meta, indent=2))
     print(f"\nbest val acc {best['val_acc']:.3f} at epoch {best['epoch']}  ->  {out/'best.pt'}")
 
 

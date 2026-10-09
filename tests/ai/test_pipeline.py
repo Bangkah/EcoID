@@ -185,7 +185,7 @@ class ConfigTests(unittest.TestCase):
         d = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(d.cleanup)
         p = Path(d.name) / "c.toml"
-        p.write_text(text, encoding="utf-8")
+        p.write_text(text)
         return p
 
     def test_default_config_loads(self):

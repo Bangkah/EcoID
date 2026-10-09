@@ -255,12 +255,12 @@ class AppE2E(unittest.TestCase):
         (self.data / "bm.png").write_bytes(image_bytes(size=(64, 48), fmt="PNG"))
         cfg = self.data / "basemap.json"
         try:
-            cfg.write_text(json.dumps({"image": "bm.png", "bounds": [5.0, 97.0, 5.4, 97.4], "attribution": "me"}), encoding="utf-8")
+            cfg.write_text(json.dumps({"image": "bm.png", "bounds": [5.0, 97.0, 5.4, 97.4], "attribution": "me"}))
             s, b = self.jreq("GET", "/api/basemap")
             self.assertEqual((b["available"], b["bounds"], b["attribution"]), (True, [5.0, 97.0, 5.4, 97.4], "me"))
             s, r, body = self.req("GET", "/basemap/image")
             self.assertEqual((s, r.getheader("Content-Type")), (200, "image/png"))
-            cfg.write_text(json.dumps({"image": "../escape.png", "bounds": [5.0, 97.0, 5.4, 97.4]}), encoding="utf-8")
+            cfg.write_text(json.dumps({"image": "../escape.png", "bounds": [5.0, 97.0, 5.4, 97.4]}))
             b = self.jreq("GET", "/api/basemap")[1]
             self.assertFalse(b["available"])
             self.assertIn("inside the data folder", b["error"])
@@ -314,7 +314,7 @@ class AppE2E(unittest.TestCase):
         img.write_bytes(image_bytes((230, 20, 20), (400, 300)))
         (self.root / "gray.png").write_bytes(image_bytes((128, 128, 128), (200, 150), fmt="PNG"))
         r = subprocess.run(["node", str(ROOT / "tests" / "ui" / "smoke.js"), str(self.port), str(img),
-                            str(STATIC_DIR / "index.html")], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
+                            str(STATIC_DIR / "index.html")], capture_output=True, text=True, timeout=60)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         out = json.loads(r.stdout.strip().splitlines()[-1])
         self.assertTrue(out["ok"], out)
@@ -335,7 +335,7 @@ class EntrypointTests(unittest.TestCase):
             model = Path(tmp) / "tiny.onnx"
             subprocess.check_call([sys.executable, str(ROOT / "scripts" / "make_test_onnx.py"), str(model)])
             p = subprocess.Popen([sys.executable, "-m", "app", "--model", str(model), "--data-dir", str(Path(tmp) / "d"),
-                                  "--port", "0"], cwd=ROOT, stdout=subprocess.PIPE, text=True, encoding="utf-8", errors="replace")
+                                  "--port", "0"], cwd=ROOT, stdout=subprocess.PIPE, text=True)
             timer = threading.Timer(30, p.kill)
             timer.start()
             try:
@@ -356,7 +356,7 @@ class EntrypointTests(unittest.TestCase):
 
     def test_missing_model_fails_clearly(self):
         r = subprocess.run([sys.executable, "-m", "app", "--model", "/nope.onnx", "--port", "0"], cwd=ROOT,
-                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30)
+                           capture_output=True, text=True, timeout=30)
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("Model file not found", r.stderr)
 

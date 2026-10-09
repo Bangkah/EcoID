@@ -118,9 +118,9 @@ class FieldTests(unittest.TestCase):
     def test_drafts_written_by_phase_3_still_load(self):
         d = self.mgr.identify(image_bytes(size=(80, 60)))
         meta = self.dir / "drafts" / f"{d.id}.json"
-        m = json.loads(meta.read_text(encoding="utf-8"))
+        m = json.loads(meta.read_text())
         m.pop("exif")
-        meta.write_text(json.dumps(m), encoding="utf-8")
+        meta.write_text(json.dumps(m))
         self.assertEqual(self.mgr.save(d.id, "VERIFIED").verification_status, V.VERIFIED)
 
     def test_unknown_draft(self):

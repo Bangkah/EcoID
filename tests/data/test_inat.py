@@ -301,7 +301,7 @@ class PipelineEndToEnd(unittest.TestCase):
             self.assertTrue(r["license"] and r["author"] and r["url"].startswith("https://www.inaturalist.org/observations/"))
         low = [r for k, r in meta.items() if "/low_quality/" in k]
         self.assertTrue(low and all("degraded" in r["author"] for r in low))
-        att = (self.data / "ATTRIBUTION.md").read_text(encoding="utf-8")
+        att = (self.data / "ATTRIBUTION.md").read_text()
         self.assertEqual(att.count("\n| ") - 1, len(meta))
         self.assertTrue((self.data / "metadata" / "inat" / "downloaded.jsonl").is_file())
 
@@ -338,7 +338,7 @@ class PipelineEndToEnd(unittest.TestCase):
 
     def test_select_cli_runs_offline(self):
         r = subprocess.run([sys.executable, str(ROOT / "scripts" / "fetch_inat.py"), "--data", str(self.data), "select",
-                            "--train", "5", "--val", "2", "--eval", "1"], capture_output=True, text=True, encoding="utf-8", errors="replace")
+                            "--train", "5", "--val", "2", "--eval", "1"], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("selection written", r.stdout)
 
@@ -353,7 +353,7 @@ class ConfigTests(unittest.TestCase):
     def test_wrong_class_set_is_rejected(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
             p = Path(d) / "c.toml"
-            p.write_text('[classes]\n"Mangifera indica" = ["x"]\n', encoding="utf-8")
+            p.write_text('[classes]\n"Mangifera indica" = ["x"]\n')
             with self.assertRaises(ValueError):
                 P.load_config(p)
 

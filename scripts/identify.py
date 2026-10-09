@@ -6,8 +6,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import _common  # noqa: F401,E402  (UTF-8 console output)
-
 from app.ai.config import DEFAULT_CONFIG_PATH, InferenceConfig
 from app.ai.inference.backend import OnnxBackend
 from app.ai.inference.identifier import Identifier
