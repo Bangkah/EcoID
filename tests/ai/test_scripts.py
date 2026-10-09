@@ -27,20 +27,20 @@ class ScriptTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def run_script(self, *args):
-        return subprocess.run([sys.executable, str(ROOT / "scripts" / args[0]), *args[1:]], capture_output=True, text=True)
+        return subprocess.run([sys.executable, str(ROOT / "scripts" / args[0]), *args[1:]], capture_output=True, text=True, encoding="utf-8", errors="replace")
 
     def test_benchmark_reports_every_stage_and_the_nfr002_verdict(self):
         out = self.root / "rep"
         r = self.run_script("benchmark.py", "--model", str(self.model), "--n", "12", "--warmup", "2", "--out", str(out))
         self.assertEqual(r.returncode, 0, r.stderr)
-        res = json.loads((out / "latency.json").read_text())
+        res = json.loads((out / "latency.json").read_text(encoding="utf-8"))
         for k in ("preprocess_ms", "inference_ms", "postprocess_ms", "total_ms"):
             self.assertEqual(res[k]["n"], 12)
             self.assertGreater(res[k]["median_ms"], 0)
         parts = sum(res[k]["average_ms"] for k in ("preprocess_ms", "inference_ms", "postprocess_ms"))
         self.assertAlmostEqual(parts, res["total_ms"]["average_ms"], delta=res["total_ms"]["average_ms"] * 0.2 + 0.5)
         self.assertTrue(res["meets_target"])                                     # a 15-parameter model is far under 10 s
-        text = (out / "latency.txt").read_text()
+        text = (out / "latency.txt").read_text(encoding="utf-8")
         for needle in ("decode+resize", "ONNX inference", "TOTAL", "NFR-002", "MET", "synthetic"):
             self.assertIn(needle, text)
 
@@ -53,8 +53,8 @@ class ScriptTests(unittest.TestCase):
         r = self.run_script("benchmark.py", "--model", str(self.model), "--images", str(imgs), "--n", "6", "--warmup", "1",
                             "--target-s", "0.0000001", "--out", str(out))
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertIn("NOT MET", (out / "latency.txt").read_text())
-        self.assertIn("3 real images", (out / "latency.txt").read_text())
+        self.assertIn("NOT MET", (out / "latency.txt").read_text(encoding="utf-8"))
+        self.assertIn("3 real images", (out / "latency.txt").read_text(encoding="utf-8"))
         self.assertNotEqual(self.run_script("benchmark.py", "--model", str(self.model), "--images", str(self.root / "empty")).returncode, 0)
 
     def test_import_backup_cli_restores_into_a_fresh_data_dir(self):
