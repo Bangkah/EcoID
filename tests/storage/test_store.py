@@ -27,17 +27,24 @@ class ModelTests(unittest.TestCase):
     def test_to_dict_has_all_fr007_fields(self):
         d = obs().to_dict()
         self.assertTrue(FR007 <= set(d))
-        self.assertEqual(set(d) - FR007, {"identification_status"})
+        self.assertEqual(set(d) - FR007, {"identification_status", "user_species", "human_label", "captured_at",
+                                          "location_source", "location_accuracy_m"})
         self.assertIsNone(d["latitude"])
         self.assertEqual(d["notes"], "")
 
     def test_validation(self):
         for kw in ({"confidence": 1.2}, {"confidence": -0.1}, {"latitude": 10.0}, {"longitude": 10.0},
-                   {"latitude": 91.0, "longitude": 0.0}, {"latitude": 0.0, "longitude": 181.0},
+                   {"latitude": 91.0, "longitude": 0.0, "location_source": "manual"},
+                   {"latitude": 0.0, "longitude": 181.0, "location_source": "manual"},
+                   {"latitude": 1.0, "longitude": 1.0},                                    # location needs a source
+                   {"latitude": 1.0, "longitude": 1.0, "location_source": "psychic"},
+                   {"location_source": "manual"},                                           # source without a location
+                   {"user_species": "Rambutan"},                                            # VERIFIED can't carry a correction
+                   {"verification_status": V.REJECTED, "user_species": "   "},
                    {"notes": "x" * 2001}):
             with self.assertRaises(ValueError, msg=str(kw)):
                 obs(**kw)
-        obs(latitude=3.59, longitude=98.67)   # valid pair
+        obs(latitude=3.59, longitude=98.67, location_source="manual")   # valid pair
 
     def test_parse_status(self):
         self.assertEqual(parse_status("verified"), V.VERIFIED)
@@ -55,7 +62,8 @@ class StoreTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_roundtrip(self):
-        o = obs(1, notes="leaf looks right", latitude=3.5, longitude=98.6)
+        o = obs(1, notes="leaf looks right", latitude=3.5, longitude=98.6, location_source="exif",
+                location_accuracy_m=12.5, captured_at="2026-10-05T07:30:00+07:00")
         self.store.insert(o)
         self.assertEqual(self.store.get(o.id), o)
 
@@ -108,14 +116,22 @@ class StoreTests(unittest.TestCase):
     def test_database_enforces_constraints(self):
         conn = sqlite3.connect(self.store.db_path)
         with self.assertRaises(sqlite3.IntegrityError):
-            conn.execute("INSERT INTO observations VALUES ('a','p','s',0.5,'[]','MAYBE','t',NULL,NULL,'','m','IDENTIFIED')")
+            conn.execute("INSERT INTO observations (id,image_path,predicted_species,confidence,alternative_predictions,"
+                         "verification_status,timestamp,notes,model,identification_status) "
+                         "VALUES ('a','p','s',0.5,'[]','MAYBE','t','','m','IDENTIFIED')")
         with self.assertRaises(sqlite3.IntegrityError):
-            conn.execute("INSERT INTO observations VALUES ('a','p','s',1.5,'[]','VERIFIED','t',NULL,NULL,'','m','IDENTIFIED')")
+            conn.execute("INSERT INTO observations (id,image_path,predicted_species,confidence,alternative_predictions,"
+                         "verification_status,timestamp,notes,model,identification_status) "
+                         "VALUES ('a','p','s',1.5,'[]','VERIFIED','t','','m','IDENTIFIED')")
+        with self.assertRaises(sqlite3.IntegrityError):
+            conn.execute("INSERT INTO observations (id,image_path,predicted_species,confidence,alternative_predictions,"
+                         "verification_status,timestamp,notes,model,identification_status,location_source) "
+                         "VALUES ('b','p','s',0.5,'[]','VERIFIED','t','','m','IDENTIFIED','psychic')")
         conn.close()
 
     def test_schema_version_and_future_guard(self):
         conn = sqlite3.connect(self.store.db_path)
-        self.assertEqual(conn.execute("PRAGMA user_version").fetchone()[0], 1)
+        self.assertEqual(conn.execute("PRAGMA user_version").fetchone()[0], 2)
         conn.execute("PRAGMA user_version = 99")
         conn.commit()
         conn.close()

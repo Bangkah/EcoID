@@ -9,19 +9,25 @@ function stub(id, tag) {
     classList: { toggle(c, on) { on === undefined ? (e._cls.has(c) ? e._cls.delete(c) : e._cls.add(c)) : (on ? e._cls.add(c) : e._cls.delete(c)); return !!on; },
                  add: (c) => e._cls.add(c), remove: (c) => e._cls.delete(c), contains: (c) => e._cls.has(c) },
     setAttribute(k, v) { e.attrs[k] = v; }, append(...k) { e.children.push(...k); }, replaceChildren(...k) { e.children = k; },
-    showModal() { e.open = true; }, close() { e.open = false; } };
+    showModal() { e.open = true; }, close() { e.open = false; },
+    addEventListener() {}, setPointerCapture() {}, getBoundingClientRect: () => ({ width: 640, height: 420, left: 0, top: 0 }),
+    offsetWidth: 240, offsetHeight: 160, remove() {}, click() {} };
   return e;
 }
 const doc = {
   getElementById: (id) => (els[id] ||= stub(id)),
   createElement: (t) => stub(null, t),
+  createElementNS: (ns, t) => stub(null, t),
+  addEventListener() {},
+  body: stub('body'),
   createTextNode: (t) => ({ text: t }),
   querySelectorAll: () => [],
 };
 const base = "http://127.0.0.1:" + port;
 const ctx = vm.createContext({
-  document: doc, navigator: {}, console, Blob, URL, setTimeout, Date,
+  document: doc, navigator: {}, console, Blob, URL, URLSearchParams, setTimeout, clearTimeout, Date, Number,
   confirm: () => true,
+  window: { addEventListener() {} }, requestAnimationFrame: (f) => setTimeout(f, 0),
   fetch: (p, o) => fetch(p.startsWith("http") ? p : base + p, o),
 });
 const visible = (id) => !doc.getElementById(id)._cls.has("hidden");
@@ -43,7 +49,8 @@ const text = (e) => [e.textContent, ...e.children.map((c) => (c.text ?? text(c))
   await vm.runInContext("saveDraft", ctx)("VERIFIED");
   if (!visible("s-saved")) fail("saved step not shown: " + text(doc.getElementById("result-err")));
 
-  await vm.runInContext("loadHistory", ctx)(true);
+  vm.runInContext("setTab", ctx)("history");                          // like clicking the History tab
+  await new Promise((r) => setTimeout(r, 400));
   const list = doc.getElementById("hist-list");
   if (list.children.length < 1) fail("history empty");
   if (!text(doc.getElementById("hist-count")).includes("observation")) fail("count missing");

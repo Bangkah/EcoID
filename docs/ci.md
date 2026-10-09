@@ -14,7 +14,7 @@ Workflows live in `.github/workflows/` (SRS section 19).
 ## What the blocking jobs guarantee
 - ~100 unit/integration tests: pipeline, dataset checks, metrics, storage, manager, HTTP server, and an offline end-to-end run with
   every non-loopback socket and DNS lookup blocked (any attempt fails the test).
-- `ui-e2e` drives Chromium through: capture → result → verify → history → edit → delete (with the `confirm()` prompt), the
+- `ui-e2e` (25 tests) drives Chromium through: capture → result → verify → history → edit → delete (with the `confirm()` prompt), photo/GPS/typed location, reject-and-correct, search filters, the offline map (zoom/pan/cluster/basemap), statistics, real CSV/GeoJSON/ZIP downloads, the
   low-confidence banner, each verification choice + history filter, discard, unreadable file, model-info dialog, a 390 px phone
   viewport (no horizontal scroll, tappable buttons, dialog fits), light/dark colour schemes, and Chromium's synthetic camera
   (`getUserMedia`). Every test also fails on **any JavaScript error** or **any request leaving the app's own origin**.

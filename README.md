@@ -33,6 +33,8 @@ python scripts/train.py --data data --out models/checkpoints/run1
 python scripts/export_model.py --checkpoint models/checkpoints/run1 --out models/ecoid.onnx --sample-dir data/val
 python scripts/calibrate_threshold.py --model models/ecoid.onnx
 python scripts/evaluate.py --model models/ecoid.onnx
+python scripts/benchmark.py --model models/ecoid.onnx        # latency vs NFR-002
+python scripts/summarize_run.py                              # one paste-able summary of everything above
 ```
 See `docs/dataset.md`, `docs/model.md`, `docs/benchmark.md`.
 
@@ -43,7 +45,9 @@ python -m app --model models/ecoid.onnx --open      # then use the browser at ht
 Photos and observations are stored in `~/.ecoid` (change with `--data-dir`). No internet is used.
 
 ## Docs
-`docs/SRS.md` requirements · `docs/architecture.md` · `docs/privacy.md` · per-phase notes in `docs/phase*.md`.
+`docs/SRS.md` requirements · `docs/phase4.md` (field observation) · `docs/phase5.md` (offline map, statistics, export/backup) · **`docs/srs_compliance.md`** (what is met, partly met, not met) · **`docs/first_run.md`** (runbook to the first real model) · `docs/architecture.md` · `docs/privacy.md` · per-phase notes in `docs/phase*.md`.
 
 ## Status
-Phase 1 done. Phase 2 tooling done; needs real data + training run. Phase 3 (app: storage, UI, history, offline e2e) done — see `docs/phase3.md` for the manual browser checklist.
+Phase 1 done. Phase 2 tooling done; needs real data + training run. Phases 3-5 (app, field observation, Eco Mapper) done; the SRS audit is in `docs/srs_compliance.md`. What remains is real data + a real training run.
+
+Turn your field photos into dataset files: `python scripts/export_observations.py --split evaluation --per-class 10`.

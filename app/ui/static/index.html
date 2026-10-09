@@ -11,9 +11,10 @@
 --accent:#4fae77;--accent-text:#0d1a12;--warn-bg:#3a3010;--warn-text:#f2d98a;--ok:#4fae77;--bad:#e0705f;--unsure:#d9b650}}
 *{box-sizing:border-box}
 body{margin:0;font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
-header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:2}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:2}
 header h1{font-size:1.15rem;margin:0}
-nav{display:flex;gap:4px;margin-left:auto}
+nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+@media (max-width:540px){header{padding:8px 10px}nav{width:100%;margin-left:0}nav button{flex:1 1 auto;padding:9px 8px}nav #btn-about{flex:0 0 auto}}
 button,.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:10px 14px;cursor:pointer;display:inline-block;text-align:center}
 button:hover,.btn:hover{border-color:var(--accent)}
 button.primary,.btn.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
@@ -46,6 +47,39 @@ dialog::backdrop{background:#0008}
 @keyframes s{to{transform:rotate(360deg)}}
 video{width:100%;border-radius:10px;background:#000}
 .err{color:var(--bad);margin-top:8px}
+.small{font-size:.8rem}
+input[type=text],input[type=search],select{font:inherit;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);min-width:0;width:100%}
+details.more{margin:10px 0;border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+details.more summary{cursor:pointer;font-weight:600}
+.loc-line{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.loc-line>*{flex:1 1 140px}
+.sub{font-size:.85rem}
+#map-wrap{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card);height:min(62vh,560px);min-height:320px;touch-action:none}
+#map-svg{width:100%;height:100%;display:block;cursor:grab;user-select:none}
+#map-svg:active{cursor:grabbing}
+#map-svg .gridline{stroke:var(--line);stroke-width:1}
+#map-svg .gridlabel{fill:var(--muted);font-size:10px}
+#map-svg .marker{stroke:#fff;stroke-width:2;cursor:pointer}
+#map-svg .marker:focus{stroke:var(--text);stroke-width:3;outline:none}
+#map-svg .cluster circle{fill:var(--accent);stroke:#fff;stroke-width:2;cursor:pointer;opacity:.92}
+#map-svg .cluster text{fill:var(--accent-text);font-size:12px;font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.map-ctl{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px}
+.map-ctl button{padding:6px 12px;font-weight:700}
+#map-scale{position:absolute;left:10px;bottom:24px;font-size:.75rem;color:var(--text);background:#fff9;padding:2px 6px;border-radius:6px}
+@media (prefers-color-scheme:dark){#map-scale{background:#0009}}
+#map-scale i{display:block;height:5px;border:2px solid var(--text);border-top:0;margin-top:2px}
+#map-attrib{position:absolute;right:8px;bottom:6px;font-size:.7rem;color:var(--muted)}
+#map-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--muted)}
+#map-popup{position:absolute;z-index:3;max-height:calc(100% - 12px);overflow:auto;width:250px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;box-shadow:0 4px 18px #0004;max-width:260px;font-size:.9rem}
+#map-popup img{width:100%;height:96px;object-fit:cover;border-radius:8px;margin-bottom:6px;background:#0002}
+#map-popup .row>*{flex:1 1 auto}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin:8px 2px;font-size:.85rem}
+.legend span::before{content:"";display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.cards .card{margin:0;text-align:center}.cards b{font-size:1.5rem;display:block}
+.hbar{display:grid;grid-template-columns:minmax(90px,170px) 1fr auto;gap:8px;align-items:center;margin:4px 0}
+.hbar .track{background:var(--line);border-radius:5px;height:12px;overflow:hidden}.hbar .track i{display:block;height:100%;background:var(--accent)}
+table.t{width:100%;border-collapse:collapse;font-size:.88rem}table.t th,table.t td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left}
+.flag{color:var(--warn-text);background:var(--warn-bg);border-radius:6px;padding:1px 6px;font-size:.75rem}
 </style>
 </head>
 <body>
@@ -54,10 +88,26 @@ video{width:100%;border-radius:10px;background:#000}
   <nav>
     <button id="tab-identify" aria-pressed="true">Identify</button>
     <button id="tab-history" aria-pressed="false">History</button>
+    <button id="tab-map" aria-pressed="false">Map</button>
+    <button id="tab-stats" aria-pressed="false">Stats</button>
     <button id="btn-about" title="Model information">ⓘ</button>
   </nav>
 </header>
 <main>
+  <div id="filters" class="card hidden">
+    <div class="row" style="align-items:center">
+      <input id="q" type="search" placeholder="Search notes, species, Mangga…" aria-label="Search">
+      <select id="flt" aria-label="Status filter">
+        <option value="">All statuses</option><option value="VERIFIED">Verified</option>
+        <option value="REJECTED">Rejected</option><option value="UNCERTAIN">Not sure</option>
+      </select>
+    </div>
+    <div class="row" style="align-items:center;margin-top:8px">
+      <label class="muted sub"><input type="checkbox" id="has-loc"> Only with location</label>
+      <span id="hist-count" class="muted"></span>
+      <button id="btn-export" type="button">⬇ Export…</button>
+    </div>
+  </div>
   <section id="view-identify">
     <div id="s-capture" class="card">
       <h2 style="margin-top:0">Photograph a plant</h2>
@@ -85,10 +135,32 @@ video{width:100%;border-radius:10px;background:#000}
       <div id="res-warn" class="warn hidden"><strong>⚠ Low confidence</strong><br>The model does not have enough confidence to provide a reliable identification.<br>Please inspect the plant and verify manually.</div>
       <p><strong>Now look at the real plant.</strong> Does it match?</p>
       <textarea id="res-notes" maxlength="2000" placeholder="Notes (optional)"></textarea>
+      <details class="more" id="loc-box">
+        <summary>📍 Location (optional)</summary>
+        <div id="loc-exif" class="hidden">
+          <p class="muted sub">This photo contains a location: <strong id="loc-exif-text"></strong></p>
+          <div class="loc-line"><button id="loc-use-exif" type="button">Use the photo's location</button></div>
+          <label class="muted sub"><input type="checkbox" id="loc-always"> Always use the photo's location when it has one</label>
+        </div>
+        <div class="loc-line">
+          <input id="loc-lat" type="text" inputmode="decimal" placeholder="Latitude (e.g. 5.18)" aria-label="Latitude">
+          <input id="loc-lon" type="text" inputmode="decimal" placeholder="Longitude (e.g. 97.14)" aria-label="Longitude">
+        </div>
+        <div class="loc-line"><button id="loc-device" type="button">Use my current location</button><button id="loc-clear" type="button">Clear</button></div>
+        <p id="loc-status" class="muted sub">No location will be saved.</p>
+        <p id="loc-err" class="err hidden"></p>
+        <p class="muted small">"Current location" asks your browser. On a phone that is GPS (works offline); on a laptop some browsers ask an online service. Nothing is sent by EcoID.</p>
+      </details>
       <div class="verify">
         <button data-v="VERIFIED" class="v-VERIFIED">✔ Verified</button>
         <button data-v="REJECTED" class="v-REJECTED">✖ Rejected</button>
         <button data-v="UNCERTAIN" class="v-UNCERTAIN">? Not sure</button>
+      </div>
+      <div id="fix-box" class="card hidden" style="margin-top:10px">
+        <strong>What was it really?</strong> <span class="muted">(optional — helps build better data)</span>
+        <select id="fix-select" aria-label="What it really is" style="margin-top:8px"></select>
+        <input id="fix-other" type="text" maxlength="120" class="hidden" placeholder="Species or common name" style="margin-top:8px">
+        <div class="row" style="margin-top:10px"><button id="btn-fix-save" class="primary">Save as rejected</button><button id="btn-fix-cancel">Back</button></div>
       </div>
       <div class="row" style="margin-top:10px"><button id="btn-discard">Discard photo</button></div>
       <div id="result-err" class="err hidden"></div>
@@ -102,17 +174,33 @@ video{width:100%;border-radius:10px;background:#000}
   </section>
 
   <section id="view-history" class="hidden">
-    <div class="card row" style="align-items:center">
-      <label for="flt">Show</label>
-      <select id="flt" style="font:inherit;padding:8px;border-radius:8px">
-        <option value="">All</option><option value="VERIFIED">Verified</option>
-        <option value="REJECTED">Rejected</option><option value="UNCERTAIN">Not sure</option>
-      </select>
-      <span id="hist-count" class="muted"></span>
-    </div>
     <div id="hist-list"></div>
     <div class="row"><button id="btn-more" class="hidden">Load more</button></div>
     <p id="hist-empty" class="muted hidden">No observations yet. Identify a plant and verify it to start your history.</p>
+  </section>
+  <section id="view-map" class="hidden">
+    <div id="map-wrap">
+      <svg id="map-svg" role="img" aria-label="Map of observations"></svg>
+      <div class="map-ctl">
+        <button id="map-zin" type="button" aria-label="Zoom in">+</button>
+        <button id="map-zout" type="button" aria-label="Zoom out">−</button>
+        <button id="map-fit" type="button" aria-label="Fit all">⤢</button>
+      </div>
+      <div id="map-scale"></div>
+      <div id="map-attrib"></div>
+      <div id="map-empty" class="hidden">No observations with a location yet.<br>Add a location when you verify a plant (photo, GPS or typed).</div>
+      <div id="map-popup" class="hidden"></div>
+    </div>
+    <div class="row" style="align-items:center;margin-top:6px">
+      <label class="muted sub">Colour by <select id="map-color" style="width:auto"><option value="status">verification</option><option value="species">species</option></select></label>
+      <span id="map-note" class="muted sub"></span>
+    </div>
+    <div id="map-legend" class="legend"></div>
+    <p class="muted small">Offline map: observations are drawn on a coordinate grid; no map tiles are ever downloaded. To add a background, put <code>basemap.json</code> + an image in the data folder (see docs/phase5.md).</p>
+  </section>
+
+  <section id="view-stats" class="hidden">
+    <div id="stats-body"></div>
   </section>
 </main>
 
@@ -127,8 +215,37 @@ video{width:100%;border-radius:10px;background:#000}
     <button data-v="REJECTED" class="v-REJECTED">✖ Rejected</button>
     <button data-v="UNCERTAIN" class="v-UNCERTAIN">? Not sure</button>
   </div>
-  <div class="row" style="margin-top:10px"><button id="d-save" class="primary">Save notes</button><button id="d-delete">Delete</button><button id="d-close">Close</button></div>
+  <div id="d-fix-wrap" class="hidden" style="margin-top:10px">
+    <strong>What was it really?</strong>
+    <select id="d-fix-select" aria-label="What it really is" style="margin-top:6px"></select>
+    <input id="d-fix-other" type="text" maxlength="120" class="hidden" placeholder="Species or common name" style="margin-top:8px">
+  </div>
+  <details class="more" id="d-loc-box">
+    <summary>📍 Location</summary>
+    <div class="loc-line">
+      <input id="d-loc-lat" type="text" inputmode="decimal" placeholder="Latitude" aria-label="Latitude">
+      <input id="d-loc-lon" type="text" inputmode="decimal" placeholder="Longitude" aria-label="Longitude">
+    </div>
+    <div class="loc-line"><button id="d-loc-device" type="button">Use my current location</button><button id="d-loc-clear" type="button">Clear</button></div>
+    <p id="d-loc-status" class="muted sub"></p>
+    <p id="d-loc-err" class="err hidden"></p>
+  </details>
+  <div class="row" style="margin-top:10px"><button id="d-save" class="primary">Save changes</button><button id="d-delete">Delete</button><button id="d-close">Close</button></div>
   <div id="d-err" class="err hidden"></div>
+</dialog>
+
+<dialog id="dlg-export">
+  <h3 style="margin-top:0">Export observations</h3>
+  <p class="muted sub" id="x-scope"></p>
+  <label>Format<select id="x-format" style="margin-top:4px">
+    <option value="csv">CSV (spreadsheet)</option>
+    <option value="geojson">GeoJSON (QGIS, geojson.io, Google Earth Pro)</option>
+    <option value="json">JSON (all fields)</option>
+    <option value="zip">Backup ZIP (data + original photos)</option>
+  </select></label>
+  <p><label><input type="checkbox" id="x-loc" checked> Include locations</label></p>
+  <p id="x-note" class="muted sub"></p>
+  <div class="row"><button id="x-go" class="primary">Download</button><button id="x-close">Close</button></div>
 </dialog>
 
 <dialog id="dlg-about">
@@ -142,7 +259,8 @@ video{width:100%;border-radius:10px;background:#000}
 const $ = (id) => document.getElementById(id);
 const show = (id, on = true) => $(id).classList.toggle("hidden", !on);
 const LABEL = { VERIFIED: "Verified", REJECTED: "Rejected", UNCERTAIN: "Not sure" };
-let COMMON = {};
+const SRC = { exif: "from photo", device: "from device", manual: "typed" };
+let COMMON = {}, CLASS_LIST = [];
 let draft = null, draftUrl = null, busy = false;
 
 function el(tag, props, ...kids) {
@@ -154,6 +272,8 @@ function el(tag, props, ...kids) {
   return e;
 }
 const pct = (x) => Math.round(x * 100) + "%";
+const nice = (sci) => (COMMON[sci] ? COMMON[sci] + " (" + sci + ")" : sci);
+function store(key, val) { try { if (val === undefined) return localStorage.getItem(key); localStorage.setItem(key, val); } catch (_) { return null; } }
 
 async function api(path, opts) {
   const r = await fetch(path, opts);
@@ -162,6 +282,7 @@ async function api(path, opts) {
   if (!r.ok) throw new Error(body.error || ("Request failed (" + r.status + ")"));
   return body;
 }
+const jsonOpts = (method, body) => ({ method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
 function renderCandidates(container, cands) {
   container.replaceChildren();
@@ -177,22 +298,121 @@ function renderCandidates(container, cands) {
   container.append(wrap);
 }
 
-/* ---------- tabs ---------- */
-function setTab(name) {
-  show("view-identify", name === "identify");
-  show("view-history", name === "history");
-  $("tab-identify").setAttribute("aria-pressed", String(name === "identify"));
-  $("tab-history").setAttribute("aria-pressed", String(name === "history"));
-  if (name === "history") loadHistory(true);
+/* ---------- "what was it really?" picker (shared by the result card and the detail dialog) ---------- */
+function fixPicker(selId, otherId) {
+  const sel = $(selId), other = $(otherId);
+  const api_ = {
+    fill() {
+      if (sel.children.length) return;
+      sel.append(el("option", { value: "", text: "I don't know what it is" }));
+      for (const c of CLASS_LIST) sel.append(el("option", { value: c.scientific, text: c.common + " · " + c.scientific }));
+      sel.append(el("option", { value: "__other__", text: "Something else…" }));
+    },
+    value() {
+      if (sel.value === "__other__") return other.value.trim() || null;
+      return sel.value || null;
+    },
+    set(v) {
+      api_.fill();
+      if (!v) { sel.value = ""; other.value = ""; }
+      else if (CLASS_LIST.some((c) => c.scientific === v)) { sel.value = v; other.value = ""; }
+      else { sel.value = "__other__"; other.value = v; }
+      other.classList.toggle("hidden", sel.value !== "__other__");
+    },
+  };
+  sel.onchange = () => other.classList.toggle("hidden", sel.value !== "__other__");
+  return api_;
 }
-$("tab-identify").onclick = () => setTab("identify");
-$("tab-history").onclick = () => setTab("history");
+const fixMain = fixPicker("fix-select", "fix-other");
+const fixDetail = fixPicker("d-fix-select", "d-fix-other");
+
+/* ---------- location widget (shared by the result card and the detail dialog) ---------- */
+function locWidget(p) {
+  const w = { lat: null, lon: null, source: null, acc: null };
+  const f = (s) => $(p + "-" + s);
+  const num = (v) => { const t = String(v).trim().replace(",", "."); return t === "" ? null : Number(t); };
+  w.render = () => {
+    f("lat").value = w.lat == null ? "" : String(w.lat);
+    f("lon").value = w.lon == null ? "" : String(w.lon);
+    f("status").textContent = w.lat == null ? "No location will be saved."
+      : "Location: " + w.lat + ", " + w.lon + " (" + SRC[w.source] + (w.acc != null ? ", ±" + Math.round(w.acc) + " m" : "") + ")";
+    show(p + "-err", false);
+  };
+  w.set = (lat, lon, source, acc) => { w.lat = lat; w.lon = lon; w.source = source; w.acc = acc == null ? null : acc; w.render(); };
+  w.clear = () => w.set(null, null, null, null);
+  w.error = (m) => { f("err").textContent = m; show(p + "-err", !!m); };
+  w.valid = () => {
+    const la = num(f("lat").value), lo = num(f("lon").value);
+    if (la === null && lo === null) return true;
+    if (la === null || lo === null) { w.error("Enter both latitude and longitude, or clear the location."); return false; }
+    if (!Number.isFinite(la) || !Number.isFinite(lo) || Math.abs(la) > 90 || Math.abs(lo) > 180) { w.error("Latitude must be within ±90 and longitude within ±180."); return false; }
+    return true;
+  };
+  const typed = () => {                      // the user edited the numbers by hand
+    const la = num(f("lat").value), lo = num(f("lon").value);
+    w.lat = Number.isFinite(la) ? la : null; w.lon = Number.isFinite(lo) ? lo : null;
+    w.source = "manual"; w.acc = null;
+    f("status").textContent = (w.lat == null || w.lon == null) ? "No location will be saved." : "Location: " + w.lat + ", " + w.lon + " (typed)";
+    w.error("");
+  };
+  f("lat").oninput = typed; f("lon").oninput = typed;
+  f("clear").onclick = () => w.clear();
+  f("device").onclick = () => {
+    if (!navigator.geolocation) { w.error("Location is not available in this browser."); return; }
+    f("status").textContent = "Getting your position…"; w.error("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => w.set(Number(pos.coords.latitude.toFixed(6)), Number(pos.coords.longitude.toFixed(6)), "device", pos.coords.accuracy),
+      (e) => { w.render(); w.error("Could not get your position: " + e.message); },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
+  };
+  w.payload = () => (w.lat == null || w.lon == null) ? {}
+    : { latitude: w.lat, longitude: w.lon, location_source: w.source || "manual", location_accuracy_m: w.acc };
+  return w;
+}
+const locMain = locWidget("loc");
+const locDetail = locWidget("d-loc");
+
+/* ---------- tabs ---------- */
+const TABS = ["identify", "history", "map", "stats"];
+let currentTab = "identify";
+function setTab(name) {
+  currentTab = name;
+  for (const t of TABS) { show("view-" + t, t === name); $("tab-" + t).setAttribute("aria-pressed", String(t === name)); }
+  show("filters", name !== "identify");
+  refreshView();
+}
+function refreshView() {
+  if (currentTab === "history") loadHistory(true);
+  else if (currentTab === "map") loadMap(true);
+  else if (currentTab === "stats") loadStats();
+}
+for (const t of TABS) $("tab-" + t).onclick = () => setTab(t);
+function filterParams() {
+  const p = new URLSearchParams();
+  if ($("flt").value) p.set("status", $("flt").value);
+  if ($("q").value.trim()) p.set("q", $("q").value.trim());
+  if ($("has-loc").checked) p.set("has_location", "true");
+  return p;
+}
 
 /* ---------- identify flow: capture -> result -> verify ---------- */
 function step(name) {
   for (const s of ["capture", "analyzing", "result", "saved"]) show("s-" + s, s === name);
 }
 function showCaptureError(msg) { $("capture-err").textContent = msg; show("capture-err", !!msg); }
+
+function prepareLocation(exif) {
+  locMain.clear();
+  $("loc-always").checked = store("ecoidAlwaysExif") === "1";
+  const has = exif && exif.latitude != null;
+  show("loc-exif", !!has);
+  if (has) {
+    $("loc-exif-text").textContent = exif.latitude + ", " + exif.longitude;
+    $("loc-use-exif").onclick = () => locMain.set(exif.latitude, exif.longitude, "exif", null);
+    if ($("loc-always").checked) { locMain.set(exif.latitude, exif.longitude, "exif", null); $("loc-box").open = true; }
+  }
+}
+$("loc-always").onchange = () => store("ecoidAlwaysExif", $("loc-always").checked ? "1" : "0");
 
 async function submitImage(blob) {
   showCaptureError("");
@@ -208,6 +428,9 @@ async function submitImage(blob) {
   renderCandidates($("res-cands"), draft.result.candidates);
   show("res-warn", draft.result.status === "LOW_CONFIDENCE");
   $("res-notes").value = "";
+  show("fix-box", false);
+  fixMain.fill(); fixMain.set(null);
+  prepareLocation(draft.exif);
   show("result-err", false);
   step("result");
 }
@@ -215,17 +438,27 @@ for (const id of ["in-camera", "in-file"]) {
   $(id).onchange = (ev) => { const f = ev.target.files[0]; ev.target.value = ""; if (f) submitImage(f); };
 }
 
-async function saveDraft(status) {
+async function saveDraft(status, userSpecies) {
   if (!draft || busy) return;
+  if (!locMain.valid()) { $("loc-box").open = true; return; }
   busy = true; show("result-err", false);
+  const body = { draft_id: draft.draft_id, verification_status: status, notes: $("res-notes").value, ...locMain.payload() };
+  if (userSpecies) body.user_species = userSpecies;
   try {
-    await api("/api/observations", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ draft_id: draft.draft_id, verification_status: status, notes: $("res-notes").value }) });
+    await api("/api/observations", jsonOpts("POST", body));
     draft = null; step("saved");
   } catch (e) { $("result-err").textContent = e.message; show("result-err", true); }
   busy = false;
 }
-for (const b of document.querySelectorAll("#s-result .verify button")) b.onclick = () => saveDraft(b.dataset.v);
+for (const b of document.querySelectorAll("#s-result .verify button")) {
+  b.onclick = () => {
+    if (b.dataset.v === "REJECTED") { fixMain.fill(); show("fix-box", true); return; }   // ask "what was it?" first
+    show("fix-box", false);
+    saveDraft(b.dataset.v);
+  };
+}
+$("btn-fix-save").onclick = () => saveDraft("REJECTED", fixMain.value());
+$("btn-fix-cancel").onclick = () => show("fix-box", false);
 
 $("btn-discard").onclick = async () => {
   if (draft) { try { await api("/api/drafts/" + draft.draft_id, { method: "DELETE" }); } catch (_) {} draft = null; }
@@ -257,13 +490,17 @@ $("btn-snap").onclick = () => {
 const PAGE = 20;
 let histOffset = 0, histTotal = 0, histSeq = 0;
 function when(iso) { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString(); }
+const filtersActive = () => !!($("flt").value || $("q").value.trim() || $("has-loc").checked);
 
 function histItem(o) {
   const common = COMMON[o.predicted_species];
   const title = el("div", {}, el("strong", { class: "sci", text: o.predicted_species }), common ? el("span", { class: "muted", text: " · " + common }) : null);
   const line2 = el("div", { class: "muted", text: "AI suggestion " + pct(o.confidence) + (o.identification_status === "LOW_CONFIDENCE" ? " · low confidence" : "") });
   const badge = el("span", { class: "badge v-" + o.verification_status, text: LABEL[o.verification_status] });
-  const meta = el("div", { class: "meta" }, title, line2, el("div", {}, badge, el("span", { class: "muted", text: "  " + when(o.timestamp) })),
+  const meta = el("div", { class: "meta" }, title, line2,
+    el("div", {}, badge, el("span", { class: "muted", text: "  " + when(o.captured_at || o.timestamp) })),
+    o.user_species ? el("div", { class: "fixed", text: "Actually: " + nice(o.user_species) }) : null,
+    o.latitude != null ? el("div", { class: "muted sub loc", text: "📍 " + o.latitude + ", " + o.longitude }) : null,
     o.notes ? el("div", { class: "notes muted", text: o.notes }) : null);
   const card = el("div", { class: "card item" }, el("img", { src: "/thumbs/" + o.id, alt: "", loading: "lazy" }), meta);
   card.onclick = () => openDetail(o);
@@ -273,48 +510,65 @@ function histItem(o) {
 async function loadHistory(reset) {
   if (reset) { histOffset = 0; $("hist-list").replaceChildren(); }
   const seq = ++histSeq;                       // later calls win; late responses of earlier calls are dropped
-  const status = $("flt").value;
-  const q = "?limit=" + PAGE + "&offset=" + histOffset + (status ? "&status=" + status : "");
+  const params = filterParams();
+  params.set("limit", String(PAGE)); params.set("offset", String(histOffset));
   try {
-    const r = await api("/api/observations" + q);
+    const r = await api("/api/observations?" + params.toString());
     if (seq !== histSeq) return;
     for (const o of r.items) $("hist-list").append(histItem(o));
     histOffset += r.items.length; histTotal = r.total;
-    $("hist-count").textContent = r.total + " observation" + (r.total === 1 ? "" : "s");
+    if (currentTab === "history") $("hist-count").textContent = r.total + " observation" + (r.total === 1 ? "" : "s");
     show("btn-more", histOffset < histTotal);
-    show("hist-empty", histTotal === 0 && !status);
+    show("hist-empty", histTotal === 0 && !filtersActive());
   } catch (e) { $("hist-count").textContent = e.message; }
 }
-$("flt").onchange = () => loadHistory(true);
+$("flt").onchange = () => refreshView();
+$("has-loc").onchange = () => refreshView();
+let qTimer = null;
+$("q").oninput = () => { clearTimeout(qTimer); qTimer = setTimeout(refreshView, 300); };
 $("btn-more").onclick = () => loadHistory(false);
 
 /* ---------- detail dialog ---------- */
 let current = null;
-function openDetail(o) {
+function showDetail(o) {
   current = o;
-  $("d-img").src = "/images/" + o.id;
   const common = COMMON[o.predicted_species];
   $("d-title").textContent = o.predicted_species + (common ? " · " + common : "");
-  $("d-sub").textContent = "AI suggestion · " + when(o.timestamp) + " · " + o.model + " · status: " + LABEL[o.verification_status];
+  $("d-sub").textContent = "AI suggestion · " + (o.captured_at ? "photo taken " + when(o.captured_at) + " · " : "saved " + when(o.timestamp) + " · ") + o.model + " · status: " + LABEL[o.verification_status];
   renderCandidates($("d-cands"), [{ label: o.predicted_species, score: o.confidence }, ...o.alternative_predictions]);
   $("d-notes").value = o.notes || "";
+  show("d-fix-wrap", o.verification_status === "REJECTED");
+  fixDetail.fill(); fixDetail.set(o.user_species);
+  if (o.latitude != null) locDetail.set(o.latitude, o.longitude, o.location_source || "manual", o.location_accuracy_m);
+  else locDetail.clear();
   show("d-err", false);
+}
+function openDetail(o) {
+  $("d-img").src = "/images/" + o.id;
+  showDetail(o);
   $("dlg-detail").showModal();
 }
 async function patch(body) {
   show("d-err", false);
   try {
-    current = await api("/api/observations/" + current.id, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    $("d-sub").textContent = "AI suggestion · " + when(current.timestamp) + " · " + current.model + " · status: " + LABEL[current.verification_status];
-    loadHistory(true);
+    const updated = await api("/api/observations/" + current.id, jsonOpts("PATCH", body));
+    showDetail(updated);
+    refreshView();
   } catch (e) { $("d-err").textContent = e.message; show("d-err", true); }
 }
 for (const b of document.querySelectorAll("#d-verify button")) b.onclick = () => patch({ verification_status: b.dataset.v });
-$("d-save").onclick = () => patch({ notes: $("d-notes").value });
+$("d-save").onclick = () => {
+  if (!locDetail.valid()) { $("d-loc-box").open = true; return; }
+  const body = { notes: $("d-notes").value };
+  if (current.verification_status === "REJECTED") body.user_species = fixDetail.value();
+  if (locDetail.lat == null) { if (current.latitude != null) body.clear_location = true; }
+  else if (locDetail.lat !== current.latitude || locDetail.lon !== current.longitude || locDetail.source !== current.location_source) Object.assign(body, locDetail.payload());
+  patch(body);
+};
 $("d-close").onclick = () => $("dlg-detail").close();
 $("d-delete").onclick = async () => {
   if (!confirm("Delete this observation and its photo from this device? This cannot be undone.")) return;
-  try { await api("/api/observations/" + current.id, { method: "DELETE" }); $("dlg-detail").close(); loadHistory(true); }
+  try { await api("/api/observations/" + current.id, { method: "DELETE" }); $("dlg-detail").close(); refreshView(); }
   catch (e) { $("d-err").textContent = e.message; show("d-err", true); }
 };
 
@@ -333,8 +587,292 @@ $("btn-about").onclick = async () => {
 };
 $("about-close").onclick = () => $("dlg-about").close();
 
+/* ---------- Eco Mapper: offline map ---------- */
+const SVGNS = "http://www.w3.org/2000/svg";
+const STATUS_COLOR = { VERIFIED: "#2f9e5f", REJECTED: "#d0453a", UNCERTAIN: "#c9a227" };
+const SPECIES_COLOR = { "Mangifera indica": "#e08a1e", "Cocos nucifera": "#6b4f2a", "Musa acuminata": "#d4c21c", "Carica papaya": "#e5603c", "Manihot esculenta": "#8a5cc2" };
+const OTHER_COLOR = "#7a8790";
+const MAP = { pts: [], cx: 0.5, cy: 0.5, z: 2, w: 0, h: 0, base: null, baseLoaded: false, raf: 0, drag: null, seq: 0 };
+const mercX = (lon) => (lon + 180) / 360;
+const mercY = (lat) => { const s = Math.sin(Math.max(-85.0511, Math.min(85.0511, lat)) * Math.PI / 180); return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI); };
+const unX = (x) => x * 360 - 180;
+const unY = (y) => (Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180) / Math.PI;
+const worldPx = () => 256 * Math.pow(2, MAP.z);
+const toScreen = (lat, lon) => [(mercX(lon) - MAP.cx) * worldPx() + MAP.w / 2, (mercY(lat) - MAP.cy) * worldPx() + MAP.h / 2];
+const fromScreen = (px, py) => { const W = worldPx(); return [unY((py - MAP.h / 2) / W + MAP.cy), unX((px - MAP.w / 2) / W + MAP.cx)]; };
+const svgEl = (tag, attrs) => { const e = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, String(v)); return e; };
+const markerColor = (p) => $("map-color").value === "species" ? (SPECIES_COLOR[p.human_label || p.predicted_species] || OTHER_COLOR) : (STATUS_COLOR[p.verification_status] || OTHER_COLOR);
+
+function measureMap() { const r = $("map-svg").getBoundingClientRect(); MAP.w = r.width; MAP.h = r.height; }
+function fitMap(items) {
+  measureMap();
+  const pts = items || MAP.pts;
+  if (!pts.length || !MAP.w) return;
+  const xs = pts.map((p) => mercX(p.longitude)), ys = pts.map((p) => mercY(p.latitude));
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const spanX = Math.max(maxX - minX, 1e-9), spanY = Math.max(maxY - minY, 1e-9);
+  const z = Math.log2(Math.min((MAP.w - 100) / (spanX * 256), (MAP.h - 100) / (spanY * 256)));
+  const same = (maxX - minX) < 1e-9 && (maxY - minY) < 1e-9;           // a single spot (or identical coordinates)
+  MAP.z = Math.max(1, Math.min(same ? 15 : 18, z));
+  MAP.cx = (minX + maxX) / 2; MAP.cy = (minY + maxY) / 2;
+}
+function niceStep(deg) { for (const s of [0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 30]) if (s >= deg) return s; return 30; }
+function scheduleDraw() { if (!MAP.raf) MAP.raf = requestAnimationFrame(() => { MAP.raf = 0; drawMap(); }); }
+
+function drawMap() {
+  const svg = $("map-svg");
+  if (!MAP.w) measureMap();
+  svg.replaceChildren();
+  svg.setAttribute("viewBox", "0 0 " + MAP.w + " " + MAP.h);
+  if (MAP.base) {                                                                    // optional offline background picture
+    const [s, w, n, e] = MAP.base.bounds, [x0, y0] = toScreen(n, w), [x1, y1] = toScreen(s, e);
+    svg.append(svgEl("image", { class: "basemap", href: MAP.base.url, x: x0, y: y0, width: x1 - x0, height: y1 - y0, preserveAspectRatio: "none" }));
+  }
+  const [latTop, lonLeft] = fromScreen(0, 0), [latBot, lonRight] = fromScreen(MAP.w, MAP.h);
+  const step = niceStep(360 / worldPx() * 90), dec = step >= 1 ? 0 : Math.min(4, Math.ceil(-Math.log10(step)));
+  for (let lon = Math.ceil(lonLeft / step) * step; lon <= lonRight; lon += step) {
+    const x = toScreen(0, lon)[0];
+    svg.append(svgEl("line", { class: "gridline", x1: x, y1: 0, x2: x, y2: MAP.h }));
+    const t = svgEl("text", { class: "gridlabel", x: x + 3, y: MAP.h - 4 }); t.textContent = lon.toFixed(dec) + "°"; svg.append(t);
+  }
+  for (let lat = Math.ceil(latBot / step) * step; lat <= latTop; lat += step) {
+    const y = toScreen(lat, 0)[1];
+    svg.append(svgEl("line", { class: "gridline", x1: 0, y1: y, x2: MAP.w, y2: y }));
+    const t = svgEl("text", { class: "gridlabel", x: 4, y: y - 3 }); t.textContent = lat.toFixed(dec) + "°"; svg.append(t);
+  }
+  // group nearby points into clusters (40 px cells) so dense areas stay readable
+  const cells = new Map();
+  for (const p of MAP.pts) {
+    const [x, y] = toScreen(p.latitude, p.longitude);
+    if (x < -40 || y < -40 || x > MAP.w + 40 || y > MAP.h + 40) continue;
+    const key = Math.floor(x / 40) + ":" + Math.floor(y / 40);
+    if (!cells.has(key)) cells.set(key, []);
+    cells.get(key).push({ p, x, y });
+  }
+  for (const group of cells.values()) {
+    if (group.length === 1) {
+      const { p, x, y } = group[0];
+      const c = svgEl("circle", { class: "marker", cx: x, cy: y, r: 8, fill: markerColor(p), tabindex: 0, role: "button",
+        "data-id": p.id, "data-status": p.verification_status, "aria-label": (p.human_label || p.predicted_species) + ", " + LABEL[p.verification_status] });
+      c.onclick = (ev) => { ev.stopPropagation(); showMapPopup([p], x, y); };
+      c.onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); showMapPopup([p], x, y); } };
+      svg.append(c);
+    } else {
+      const x = group.reduce((a, g) => a + g.x, 0) / group.length, y = group.reduce((a, g) => a + g.y, 0) / group.length;
+      const g = svgEl("g", { class: "cluster", "data-count": group.length, tabindex: 0, role: "button", "aria-label": group.length + " observations" });
+      g.append(svgEl("circle", { cx: x, cy: y, r: 13 + Math.min(10, Math.log2(group.length) * 2.5) }));
+      const t = svgEl("text", { x, y }); t.textContent = String(group.length); g.append(t);
+      const items = group.map((m) => m.p);
+      g.onclick = (ev) => { ev.stopPropagation(); openCluster(items, x, y); };
+      g.onkeydown = (ev) => { if (ev.key === "Enter") openCluster(items, x, y); };
+      svg.append(g);
+    }
+  }
+  drawScale();
+}
+function openCluster(items, x, y) {
+  const xs = items.map((p) => p.longitude), ys = items.map((p) => p.latitude);
+  const spread = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+  if (MAP.z < 18 && spread > 1e-6) { fitMap(items); hideMapPopup(); scheduleDraw(); }   // zoom into the cluster
+  else showMapPopup(items, x, y);                                                       // same spot: list them
+}
+function drawScale() {
+  const lat = fromScreen(MAP.w / 2, MAP.h / 2)[0];
+  const mpp = 40075016.686 * Math.cos(lat * Math.PI / 180) / worldPx();
+  let len = 1;
+  for (const m of [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000]) { if (m / mpp > 140) break; len = m; }
+  const box = $("map-scale");
+  box.replaceChildren(document.createTextNode(len >= 1000 ? len / 1000 + " km" : len + " m"), el("i", { style: "width:" + Math.round(len / mpp) + "px" }));
+}
+function hideMapPopup() { show("map-popup", false); }
+function showMapPopup(items, x, y) {
+  const box = $("map-popup");
+  box.replaceChildren();
+  for (const p of items.slice(0, 8)) {
+    const common = COMMON[p.predicted_species];
+    const row = el("div", { style: "margin-bottom:8px" },
+      items.length === 1 ? el("img", { src: "/thumbs/" + p.id, alt: "" }) : null,
+      el("div", {}, el("strong", { class: "sci", text: p.predicted_species }), common ? el("span", { class: "muted", text: " · " + common }) : null),
+      el("div", {}, el("span", { class: "badge v-" + p.verification_status, text: LABEL[p.verification_status] }), el("span", { class: "muted", text: "  " + when(p.when) })),
+      p.user_species ? el("div", { class: "fixed", text: "Actually: " + nice(p.user_species) }) : null);
+    const open = el("button", { type: "button", class: "popup-open", text: "Open details" });
+    open.onclick = async () => { try { openDetail(await api("/api/observations/" + p.id)); hideMapPopup(); } catch (e) { $("map-note").textContent = e.message; } };
+    row.append(open);
+    box.append(row);
+  }
+  if (items.length > 8) box.append(el("div", { class: "muted sub", text: "+" + (items.length - 8) + " more at this spot" }));
+  const close = el("button", { type: "button", class: "popup-close", text: "Close" });
+  close.onclick = hideMapPopup;
+  box.append(close);
+  show("map-popup", true);
+  const bw = box.offsetWidth || 240, bh = box.offsetHeight || 160;
+  box.style.left = Math.max(6, Math.min(MAP.w - bw - 6, x + 12)) + "px";
+  box.style.top = Math.max(6, Math.min(MAP.h - bh - 6, y - bh / 2)) + "px";
+}
+function renderLegend() {
+  const lg = $("map-legend"); lg.replaceChildren();
+  const entries = $("map-color").value === "species"
+    ? [...Object.entries(SPECIES_COLOR).map(([k, c]) => [(COMMON[k] || k), c]), ["other", OTHER_COLOR]]
+    : Object.entries(STATUS_COLOR).map(([k, c]) => [LABEL[k], c]);
+  for (const [name, c] of entries) lg.append(el("span", { style: "--c:" + c, text: name }));
+}
+async function loadMap(refit) {
+  measureMap();
+  hideMapPopup();
+  const seq = ++MAP.seq;                                  // a newer filter wins over a slower older response
+  try {
+    if (!MAP.baseLoaded) {
+      MAP.baseLoaded = true;
+      const b = await api("/api/basemap");
+      MAP.base = b.available ? { bounds: b.bounds, url: b.url } : null;
+      $("map-attrib").textContent = b.available ? b.attribution : "";
+      if (b.error) $("map-note").textContent = "Basemap not used: " + b.error;
+    }
+    const params = filterParams(); params.set("has_location", "true");
+    const r = await api("/api/map?" + params.toString());
+    if (seq !== MAP.seq) return;
+    MAP.pts = r.items;
+    $("hist-count").textContent = r.total + " with a location";
+    if (!$("map-note").textContent.startsWith("Basemap")) $("map-note").textContent = r.truncated ? "Showing the first 20,000 points." : "";
+    show("map-empty", r.items.length === 0);
+    renderLegend();
+    if (refit) fitMap();
+    drawMap();
+  } catch (e) { $("map-note").textContent = e.message; }
+}
+function zoomAt(factor, px, py) {
+  const [lat, lon] = fromScreen(px, py);
+  MAP.z = Math.max(1, Math.min(19, MAP.z + factor));
+  const W = worldPx();
+  MAP.cx = mercX(lon) - (px - MAP.w / 2) / W; MAP.cy = mercY(lat) - (py - MAP.h / 2) / W;
+  scheduleDraw();
+}
+$("map-zin").onclick = () => zoomAt(1, MAP.w / 2, MAP.h / 2);
+$("map-zout").onclick = () => zoomAt(-1, MAP.w / 2, MAP.h / 2);
+$("map-fit").onclick = () => { fitMap(); hideMapPopup(); scheduleDraw(); };
+$("map-color").onchange = () => { renderLegend(); drawMap(); };
+$("map-svg").addEventListener("wheel", (ev) => {
+  ev.preventDefault();
+  const r = $("map-svg").getBoundingClientRect();
+  zoomAt(-ev.deltaY * 0.0025, ev.clientX - r.left, ev.clientY - r.top);
+}, { passive: false });
+$("map-svg").addEventListener("pointerdown", (ev) => {
+  if (ev.target.closest && ev.target.closest(".marker, .cluster")) return;
+  MAP.drag = { x: ev.clientX, y: ev.clientY, cx: MAP.cx, cy: MAP.cy, moved: false };
+  $("map-svg").setPointerCapture(ev.pointerId);
+});
+$("map-svg").addEventListener("pointermove", (ev) => {
+  const d = MAP.drag; if (!d) return;
+  const dx = ev.clientX - d.x, dy = ev.clientY - d.y;
+  if (Math.abs(dx) + Math.abs(dy) > 3) d.moved = true;
+  MAP.cx = d.cx - dx / worldPx(); MAP.cy = d.cy - dy / worldPx();
+  scheduleDraw();
+});
+const endDrag = (ev) => { if (MAP.drag && !MAP.drag.moved) hideMapPopup(); MAP.drag = null; };
+$("map-svg").addEventListener("pointerup", endDrag);
+$("map-svg").addEventListener("pointercancel", endDrag);
+window.addEventListener("resize", () => { if (currentTab === "map") { measureMap(); scheduleDraw(); } });
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") hideMapPopup(); });
+
+/* ---------- Eco Mapper: field statistics ---------- */
+const pc = (x, d = 0) => x == null ? "–" : (x * 100).toFixed(d) + "%";
+function hbar(label, value, max, extra) {
+  return el("div", { class: "hbar" }, el("span", { text: label }),
+    el("div", { class: "track" }, el("i", { style: "width:" + (max ? Math.max(2, Math.round(value / max * 100)) : 0) + "%" })),
+    el("span", { class: "muted", text: extra || String(value) }));
+}
+function table(head, rows) {
+  const t = el("table", { class: "t" }, el("thead", {}, el("tr", {}, ...head.map((h) => el("th", { text: h })))));
+  const b = el("tbody"); for (const r of rows) b.append(el("tr", {}, ...r.map((c) => el("td", { text: String(c) })))); t.append(b); return t;
+}
+function renderStats(s) {
+  const body = $("stats-body"); body.replaceChildren();
+  if (!s.total) { body.append(el("div", { class: "card muted", text: "No observations match. Identify and verify a plant to start your field statistics." })); return; }
+  const cards = el("div", { class: "cards" });
+  for (const [label, v] of [["Observations", s.total], ["Verified", s.by_status.VERIFIED], ["Rejected", s.by_status.REJECTED], ["Not sure", s.by_status.UNCERTAIN], ["With location", s.with_location]]) {
+    cards.append(el("div", { class: "card" }, el("b", { text: String(v) }), el("span", { class: "muted", text: label })));
+  }
+  body.append(cards);
+
+  const fa = s.field_agreement, ag = el("div", { class: "card", id: "st-agreement" }, el("h3", { style: "margin-top:0", text: "How often did you agree with the suggestion?" }));
+  if (!fa.n) ag.append(el("p", { class: "muted", text: "No verified or rejected observations yet." }));
+  else {
+    ag.append(el("p", {}, el("strong", { id: "st-agree-rate", text: pc(fa.rate) }), document.createTextNode(" — " + fa.k + " of " + fa.n + " decisions (95% interval " + pc(fa.ci_low) + "–" + pc(fa.ci_high) + ")")));
+    if (fa.too_few) ag.append(el("p", {}, el("span", { class: "flag", text: "only " + fa.n + " decisions — too few to conclude anything" })));
+  }
+  ag.append(el("p", { class: "muted sub", text: s.caveat }));
+  body.append(ag);
+
+  const sp = el("div", { class: "card" }, el("h3", { style: "margin-top:0", text: "What the app suggested" }));
+  const max = Math.max(...Object.values(s.suggested));
+  for (const [k, v] of Object.entries(s.suggested)) {
+    const a = s.agreement_by_species[k];
+    sp.append(hbar((COMMON[k] ? COMMON[k] + " · " : "") + k, v, max, v + (a && a.n ? " · agreed " + a.k + "/" + a.n : "")));
+  }
+  body.append(sp);
+
+  const conf = el("div", { class: "card" }, el("h3", { style: "margin-top:0", text: "Confidence vs. what you decided" }),
+    table(["Model confidence", "Decisions", "You agreed", "Rate"], s.by_confidence.map((r) => [r.label, r.n, r.k, r.n ? pc(r.rate) + (r.too_few ? " (few)" : "") : "–"])),
+    el("p", { class: "muted sub", text: "A well-calibrated model agrees more often as confidence rises. Bins with fewer than 10 decisions are marked (few)." }));
+  body.append(conf);
+
+  const bi = s.by_identification_status;
+  body.append(el("div", { class: "card" }, el("h3", { style: "margin-top:0", text: "Confident vs. low-confidence answers" }),
+    table(["Answer", "Photos", "Verified", "Rejected", "Not sure"], [["Identified", bi.IDENTIFIED.n, bi.IDENTIFIED.VERIFIED, bi.IDENTIFIED.REJECTED, bi.IDENTIFIED.UNCERTAIN],
+      ["Low confidence", bi.LOW_CONFIDENCE.n, bi.LOW_CONFIDENCE.VERIFIED, bi.LOW_CONFIDENCE.REJECTED, bi.LOW_CONFIDENCE.UNCERTAIN]])));
+
+  if (s.corrections.length) body.append(el("div", { class: "card" }, el("h3", { style: "margin-top:0", text: "When it was wrong: what it really was" }),
+    table(["Suggested", "Actually", "Times"], s.corrections.map((c) => [nice(c.suggested), nice(c.actually), c.count]))));
+
+  const days = Object.entries(s.per_day).slice(-30), dmax = Math.max(...days.map((d) => d[1]));
+  const act = el("div", { class: "card" }, el("h3", { style: "margin-top:0", text: "Activity (last " + days.length + " days with observations)" }));
+  for (const [d, n] of days) act.append(hbar(d, n, dmax));
+  body.append(act);
+}
+async function loadStats() {
+  try {
+    const s = await api("/api/stats?" + filterParams().toString());
+    $("hist-count").textContent = s.total + " observation" + (s.total === 1 ? "" : "s");
+    renderStats(s);
+  } catch (e) { $("stats-body").textContent = e.message; }
+}
+
+/* ---------- export ---------- */
+const X_NOTES = {
+  csv: "One row per observation. Opens in Excel / Sheets / LibreOffice. Text that could be run as a formula is neutralised.",
+  geojson: "Only observations that have a location. Coordinates are [longitude, latitude]. Open in QGIS, geojson.io, Google Earth Pro.",
+  json: "Every field, as a JSON list.",
+  zip: "A full backup: data + your original photos (with their EXIF). Restore with scripts/import_backup.py.",
+};
+function syncExportDialog() {
+  const f = $("x-format").value;
+  $("x-note").textContent = X_NOTES[f];
+  $("x-loc").disabled = f === "geojson";
+  if (f === "geojson") $("x-loc").checked = true;
+  const p = filterParams(), parts = [];
+  if (p.get("status")) parts.push("status " + LABEL[p.get("status")]);
+  if (p.get("q")) parts.push("search “" + p.get("q") + "”");
+  if (p.get("has_location")) parts.push("only with location");
+  $("x-scope").textContent = parts.length ? "Exports the observations matching: " + parts.join(", ") + "." : "Exports all observations.";
+}
+$("btn-export").onclick = () => { syncExportDialog(); $("dlg-export").showModal(); };
+$("x-format").onchange = syncExportDialog;
+$("x-close").onclick = () => $("dlg-export").close();
+$("x-go").onclick = () => {
+  const p = filterParams();
+  p.set("format", $("x-format").value);
+  p.set("include_location", $("x-loc").checked ? "true" : "false");
+  const a = document.createElement("a");
+  a.href = "/api/export?" + p.toString(); a.download = "";
+  document.body.append(a); a.click(); a.remove();
+};
+
 (async () => {
-  try { const m = await api("/api/model"); for (const c of m.class_list) COMMON[c.scientific] = c.common; } catch (_) {}
+  try {
+    const m = await api("/api/model");
+    CLASS_LIST = m.class_list;
+    for (const c of m.class_list) COMMON[c.scientific] = c.common;
+  } catch (_) {}
 })();
 </script>
 </body>

@@ -1,5 +1,7 @@
 """Phase 3.4 — end-to-end, with a real HTTP server, real ONNX Runtime and the network blocked."""
+import csv
 import http.client
+import io
 import json
 import re
 import subprocess
@@ -7,6 +9,8 @@ import sys
 import tempfile
 import threading
 import unittest
+import uuid
+import zipfile
 from pathlib import Path
 
 from app.ai.config import InferenceConfig
@@ -15,7 +19,7 @@ from app.ai.inference.identifier import Identifier
 from app.observation.manager import ObservationManager
 from app.storage.store import ObservationStore
 from app.ui.server import STATIC_DIR, build_model_info, make_server
-from tests.helpers import block_network, image_bytes
+from tests.helpers import block_network, exif_jpeg, image_bytes
 
 ROOT = Path(__file__).resolve().parents[2]
 FR007 = {"id", "image_path", "predicted_species", "confidence", "alternative_predictions",
@@ -145,6 +149,125 @@ class AppE2E(unittest.TestCase):
         self.assertEqual(self.req("GET", "/nope")[0], 404)
         self.assertEqual(self.jreq("PATCH", "/api/observations/" + "0" * 32, {"notes": "x"})[0], 404)
 
+    def test_field_features_over_http_with_network_blocked(self):
+        with block_network() as attempts:
+            photo = exif_jpeg(5.1789, 97.1421, "2026:10:05 07:30:00", "+07:00", size=(500, 400))
+            s, r, d = self.req("POST", "/api/identify", photo, ctype="image/jpeg")
+            d = json.loads(d)
+            self.assertAlmostEqual(d["exif"]["latitude"], 5.1789, places=3)
+            self.assertEqual(d["exif"]["captured_at"], "2026-10-05T07:30:00+07:00")
+            tag = "fld" + d["draft_id"][:6]
+            s, o = self.jreq("POST", "/api/observations", {"draft_id": d["draft_id"], "verification_status": "REJECTED",
+                                                            "user_species": "rambutan", "notes": tag, "use_photo_location": True})
+            self.assertEqual(s, 201)
+            self.assertEqual((o["user_species"], o["human_label"], o["location_source"]), ("rambutan", "rambutan", "exif"))
+            self.assertEqual(o["captured_at"], "2026-10-05T07:30:00+07:00")
+
+            q = lambda qs: self.jreq("GET", "/api/observations?" + qs)[1]          # noqa: E731
+            self.assertEqual([x["id"] for x in q(f"q={tag}")["items"]], [o["id"]])
+            self.assertIn(o["id"], [x["id"] for x in q("has_location=true&limit=200")["items"]])
+            self.assertIn(o["id"], [x["id"] for x in q("date_from=2026-10-05&date_to=2026-10-05&limit=200")["items"]])
+            self.assertEqual(q("q=rambutan&has_location=false")["items"], [])
+
+            s, o2 = self.jreq("PATCH", f"/api/observations/{o['id']}", {"latitude": 1.5, "longitude": 2.5, "location_source": "manual"})
+            self.assertEqual((s, o2["latitude"], o2["location_source"]), (200, 1.5, "manual"))
+            s, o3 = self.jreq("PATCH", f"/api/observations/{o['id']}", {"clear_location": True, "user_species": None})
+            self.assertEqual((o3["latitude"], o3["user_species"], o3["location_source"]), (None, None, None))
+            s, o4 = self.jreq("PATCH", f"/api/observations/{o['id']}", {"verification_status": "VERIFIED"})
+            self.assertEqual(o4["human_label"], "Mangifera indica")
+        self.assertEqual(attempts, [])
+
+    def test_field_input_validation(self):
+        _, _, d = self.identify(size=(60, 40))
+        did = d["draft_id"]
+        bad = [{"use_photo_location": "yes"}, {"use_photo_location": True},               # photo has no GPS
+               {"latitude": "5"}, {"latitude": 5.0}, {"latitude": 91, "longitude": 0},
+               {"latitude": 5.0, "longitude": 1.0, "location_source": "psychic"},
+               {"user_species": "Citrus"}, {"user_species": 7}]
+        for extra in bad:
+            body = {"draft_id": did, "verification_status": "VERIFIED", **extra}
+            if "user_species" in extra and extra["user_species"] == 7:
+                body["verification_status"] = "REJECTED"
+            self.assertEqual(self.jreq("POST", "/api/observations", body)[0], 400, extra)
+        s, o = self.jreq("POST", "/api/observations", {"draft_id": did, "verification_status": "REJECTED"})   # draft survived all of it
+        self.assertEqual(s, 201)
+        oid = o["id"]
+        for patch in ({"latitude": 5.0}, {"longitude": 5.0}, {"latitude": None, "longitude": None}, {"user_species": 5},
+                      {"latitude": 5.0, "longitude": 5.0, "location_source": "x"}):
+            self.assertEqual(self.jreq("PATCH", f"/api/observations/{oid}", patch)[0], 400, patch)
+        for qs in ("date_from=5-10-2026", "has_location=maybe", "date_to=never"):
+            self.assertEqual(self.jreq("GET", "/api/observations?" + qs)[0], 400, qs)
+
+    def seed(self, tag, status="VERIFIED", lat=None, lon=None, rgb=(230, 20, 20), notes=None, **extra):
+        _, _, d = self.identify(rgb, (200, 150))
+        body = {"draft_id": d["draft_id"], "verification_status": status, "notes": notes or tag, **extra}
+        if lat is not None:
+            body.update(latitude=lat, longitude=lon, location_source="manual")
+        s, o = self.jreq("POST", "/api/observations", body)
+        self.assertEqual(s, 201, o)
+        return o
+
+    def test_stats_map_export_endpoints(self):
+        tag = "eco" + uuid.uuid4().hex[:6]
+        a = self.seed(tag, "VERIFIED", 5.18, 97.14, notes=f"=SUM({tag})")
+        b = self.seed(tag, "REJECTED", 5.19, 97.15, rgb=(20, 20, 230), user_species="rambutan")
+        c = self.seed(tag, "UNCERTAIN")
+        with block_network() as attempts:
+            s, st = self.jreq("GET", f"/api/stats?q={tag}")
+            self.assertEqual((st["total"], st["with_location"], st["by_status"]["REJECTED"]), (3, 2, 1))
+            self.assertEqual((st["field_agreement"]["k"], st["field_agreement"]["n"]), (1, 2))
+            self.assertTrue(st["field_agreement"]["too_few"])
+            self.assertEqual(st["corrections"][0]["actually"], "rambutan")
+
+            s, mp = self.jreq("GET", f"/api/map?q={tag}")
+            self.assertEqual(sorted(i["id"] for i in mp["items"]), sorted([a["id"], b["id"]]))   # only located ones
+            self.assertEqual(set(mp["items"][0]), {"id", "latitude", "longitude", "verification_status", "predicted_species",
+                                                   "user_species", "human_label", "confidence", "identification_status", "when"})
+            self.assertEqual(self.jreq("GET", f"/api/map?q={tag}&status=REJECTED")[1]["total"], 1)
+
+            s, r, body = self.req("GET", f"/api/export?format=csv&q={tag}")
+            self.assertEqual(s, 200)
+            self.assertIn("attachment; filename=\"ecoid-observations-", r.getheader("Content-Disposition"))
+            self.assertTrue(r.getheader("Content-Type").startswith("text/csv"))
+            rows = list(csv.DictReader(io.StringIO(body.decode("utf-8-sig"))))
+            self.assertEqual(len(rows), 3)
+            self.assertIn(f"'=SUM({tag})", [x["notes"] for x in rows])
+            s, r, body = self.req("GET", f"/api/export?format=geojson&q={tag}")
+            self.assertEqual(r.getheader("Content-Type"), "application/geo+json")
+            self.assertEqual(len(json.loads(body)["features"]), 2)
+            s, r, body = self.req("GET", f"/api/export?format=csv&q={tag}&include_location=false")
+            self.assertNotIn("97.14", body.decode("utf-8-sig"))
+            s, r, body = self.req("GET", f"/api/export?format=zip&q={tag}")
+            self.assertEqual(r.getheader("Content-Type"), "application/zip")
+            with zipfile.ZipFile(io.BytesIO(body)) as z:
+                self.assertEqual(json.loads(z.read("manifest.json"))["count"], 3)
+                self.assertEqual(len([n for n in z.namelist() if n.startswith("images/")]), 3)
+        self.assertEqual(attempts, [])
+        for qs in ("format=pdf", "format=csv&include_location=maybe", "format=geojson&include_location=false", "format=zip&date_from=x"):
+            self.assertEqual(self.req("GET", "/api/export?" + qs)[0], 400, qs)
+        self.assertEqual(self.req("GET", "/api/map?limit=abc")[0], 400)
+        self.assertEqual(self.req("GET", "/api/stats?has_location=maybe")[0], 400)
+        del c
+
+    def test_basemap_endpoints(self):
+        self.assertFalse(self.jreq("GET", "/api/basemap")[1]["available"])
+        self.assertEqual(self.req("GET", "/basemap/image")[0], 404)
+        (self.data / "bm.png").write_bytes(image_bytes(size=(64, 48), fmt="PNG"))
+        cfg = self.data / "basemap.json"
+        try:
+            cfg.write_text(json.dumps({"image": "bm.png", "bounds": [5.0, 97.0, 5.4, 97.4], "attribution": "me"}))
+            s, b = self.jreq("GET", "/api/basemap")
+            self.assertEqual((b["available"], b["bounds"], b["attribution"]), (True, [5.0, 97.0, 5.4, 97.4], "me"))
+            s, r, body = self.req("GET", "/basemap/image")
+            self.assertEqual((s, r.getheader("Content-Type")), (200, "image/png"))
+            cfg.write_text(json.dumps({"image": "../escape.png", "bounds": [5.0, 97.0, 5.4, 97.4]}))
+            b = self.jreq("GET", "/api/basemap")[1]
+            self.assertFalse(b["available"])
+            self.assertIn("inside the data folder", b["error"])
+            self.assertEqual(self.req("GET", "/basemap/image")[0], 404)
+        finally:
+            cfg.unlink(missing_ok=True)
+
     def test_oversized_upload_rejected_early(self):
         c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
         c.putrequest("POST", "/api/identify")
@@ -199,7 +322,7 @@ class AppE2E(unittest.TestCase):
 
     def test_page_is_self_contained(self):
         s, r, body = self.req("GET", "/")
-        html = body.decode()
+        html = body.decode().replace("http://www.w3.org/2000/svg", "")     # an XML namespace identifier, never fetched
         self.assertEqual(s, 200)
         self.assertIn("default-src 'none'", r.getheader("Content-Security-Policy"))
         self.assertEqual(re.findall(r"(?:https?:)?//[A-Za-z0-9.-]+\.[a-z]{2,}", html), [])   # no external hosts
