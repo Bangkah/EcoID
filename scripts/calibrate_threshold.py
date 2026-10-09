@@ -52,7 +52,7 @@ def main():
     (out / "calibration.json").write_text(json.dumps(
         {"constraints": {"min_negative_rejection": a.min_negative_rejection,
                          "min_selective_accuracy": a.min_selective_accuracy},
-         "recommended": best, "sweep": sweep}, indent=2))
+         "recommended": best, "sweep": sweep}, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

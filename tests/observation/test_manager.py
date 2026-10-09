@@ -120,9 +120,9 @@ class ManagerTests(unittest.TestCase):
         self.mgr.discard(a.id)
         self.assertFalse((self.dir / "drafts" / f"{a.id}.json").exists())
         meta = self.dir / "drafts" / f"{b.id}.json"
-        m = json.loads(meta.read_text())
+        m = json.loads(meta.read_text(encoding="utf-8"))
         m["created"] = time.time() - 3 * 86400
-        meta.write_text(json.dumps(m))
+        meta.write_text(json.dumps(m), encoding="utf-8")
         self.assertEqual(self.mgr.purge_drafts(24), 1)
         self.assertEqual(list((self.dir / "drafts").iterdir()), [])
 

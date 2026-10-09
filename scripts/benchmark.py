@@ -89,8 +89,8 @@ def main():
     lines += ["", f"NFR-002 (p95 <= {a.target_s:.0f} s per image): {'MET' if res['meets_target'] else 'NOT MET'}"]
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "latency.json").write_text(json.dumps(res, indent=2))
-    (out / "latency.txt").write_text("\n".join(lines) + "\n")
+    (out / "latency.json").write_text(json.dumps(res, indent=2), encoding="utf-8")
+    (out / "latency.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
 
 

@@ -140,16 +140,16 @@ class BasemapTests(unittest.TestCase):
             self.assertIsNone(load_basemap(d))
             (d / "map.png").write_bytes(image_bytes(size=(40, 30), fmt="PNG"))
             cfg = d / "basemap.json"
-            cfg.write_text(json.dumps({"image": "map.png", "bounds": [5.0, 97.0, 5.5, 97.5], "attribution": "me"}))
+            cfg.write_text(json.dumps({"image": "map.png", "bounds": [5.0, 97.0, 5.5, 97.5], "attribution": "me"}), encoding="utf-8")
             b = load_basemap(d)
             self.assertEqual((b["bounds"], b["mime"]), ([5.0, 97.0, 5.5, 97.5], "image/png"))
             for bad in ({"image": "map.png", "bounds": [5.5, 97.0, 5.0, 97.5]}, {"image": "map.png", "bounds": [1, 2, 3]},
                         {"image": "../outside.png", "bounds": [1, 2, 3, 4]}, {"image": "nope.png", "bounds": [1, 2, 3, 4]},
                         {"image": "map.png", "bounds": [-89, 0, 89, 10]}, {"image": "map.txt", "bounds": [1, 2, 3, 4]}):
-                cfg.write_text(json.dumps(bad))
+                cfg.write_text(json.dumps(bad), encoding="utf-8")
                 with self.assertRaises(BasemapError, msg=str(bad)):
                     load_basemap(d)
-            cfg.write_text("{not json")
+            cfg.write_text("{not json", encoding="utf-8")
             with self.assertRaises(BasemapError):
                 load_basemap(d)
 
